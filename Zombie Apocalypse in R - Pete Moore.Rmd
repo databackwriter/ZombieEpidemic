@@ -1,0 +1,44 @@
+---
+title: "Zombie Apocalypse in R - Pete Moore"
+author: "Pete Moore - STUDENT ID: 170000983 - COURSE: AC52050 PROGRAMMING LANGUAGES"
+date: "11/06/2018"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+##Zombie Apocalypse in R
+
+###Understanding
+This is a study of epidemiology. The basis of the study is to model the interactions between zombies and humans (aka susceptibles). The interatction between can be modelled mathematically by the below differential equation[^1]:
+S0 =  􀀀 SZ 􀀀 S
+Z0 = SZ + R 􀀀 SZ
+R0 = S + SZ 􀀀 R:
+
+####Definitions
+- Humanoid: a human or a zombie
+- Susceptible: an uninfected human
+- Removed: a 
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+summary(cars)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+##References
+[^1]: Munz, P. et al. (2009) ‘Zombies!’, Science.

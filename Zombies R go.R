@@ -3,8 +3,8 @@ rm(list=ls()) #clear variables
 cat("\014")  #clear console
 #dev.off(dev.list()["RStudioGD"]) # clear phumanoids
 
-library("plot3D")
-library("odeintr")
+# library("plot3D")
+# library("odeintr")
 
 #nominal definitions
 #x-"x" displacement in a two-dimensional plane where x and y are orthogonal
