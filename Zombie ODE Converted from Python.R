@@ -34,8 +34,6 @@ R0 <- 0 #initial death population
 
 y0 <- c(S0,Z0,R0)
 
-
-
 soln = integrate_sys(f, y0, 5, 0.01)
 
 plot(soln)

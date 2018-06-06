@@ -19,7 +19,7 @@ primeS<-3
 primeZ<-2
 
 #time parameters
-ntimesteps<-249 #time steps
+ntimesteps<-3 #time steps
 vtimesteps<-c(0:ntimesteps) #set up a zero-based vector, t, that will represent time, NB unit time in steps of one
 
 # epidemiology parameters (note that these have been anglicised from Munz et al, e.g. Π is represented as P)
@@ -56,28 +56,53 @@ interfacedistance<-2 #distance at which zombies infect susceptibles or susceptil
 zombiewinrate<-0.95
 
 #random walk functions
-rwalk1dhumanoids<-function(Nt, Ni, mu, sigma, xinit, useunif=FALSE){
+rwalk1dhumanoids<-function(Nt, Ni, mu, sigma, xinit, timestepslocal, humanoidtype="Humanoid"){
+  #builds a one-d random walk along  nominal time axis
+  #where mu=0 this is akin to Brownian motion
+  #inspired by ideas at http://www.phytools.org/eqg/Exercise_4.1/
+  #Nt-number of timesteps, Ni-size of initial Humaoid population,
+  #mu,sigma-mean and standard deviation for footstep length
+  #xinit-initial x-position
   Nlarge<-Nt*Ni # number of time steps multiplied by initial number of humanoids
-  Xt<-rep(xinit,Ni) #set of start points
+  Xt<-rep(xinit,Ni) #set of start points (one for each humanoid)
   footsteps<-rnorm(n=Nlarge,mean=mu,sd=sigma) #lets now get a super long set of footsteps
   X<-matrix(data=footsteps,nrow=Ni,ncol=Nt) #now get a matrix where we get Nt columns for each of our Ni humanoids
-  X<-cbind(Xt,X) #now place our initial co-ordinate 
+  X<-cbind(Xt,X) #now place our initial co-ordinate against x (literally x vs t)
   X<-apply(X=X,MARGIN=1,FUN=cumsum) 
   X<-t(X) #SUBTLETY: transpose
+  dimnames(X)=list(paste(humanoidtype,c(1:Ni)),paste0("t", timestepslocal))
   return(X)
 }
-rwalk2dhumanoids<-function(Nt, Ni, mu, sigma, xinit, yinit, timestepslocal, useunif=FALSE, humanoidtype="Humanoid"){
-  #inspired by ideas at http://www.phytools.org/eqg/Exercise_4.1/
-  X<-rwalk1dhumanoids(Nt=Nt, Ni=Ni, mu=mu, sigma=sigma, xinit=xinit, useunif=FALSE) # get Ni rows of humanoids X co-ordinates
-  Y<-rwalk1dhumanoids(Nt=Nt, Ni=Ni, mu=mu, sigma=sigma, xinit=xinit, useunif=FALSE) # get Ni rows of humanoids Y co-ordinates
+#get your two arrays, break them into x and y co-ords (Ax,Bx,Ay,By), adapt lines 83 to 90
+humanx<-rwalk1dhumanoids(Nt=7, Ni=3, mu = 1, sigma= 1, xinit = 10, timestepslocal=c(0:7),humanoidtype=prefixS)
+humany<-rwalk1dhumanoids(Nt=7, Ni=3, mu = 1, sigma= 1, xinit = 10, timestepslocal=c(0:7),humanoidtype=prefixS)
+
+zombiex<-rwalk1dhumanoids(Nt=7, Ni=6, mu = 0, sigma= 1, xinit = 1, timestepslocal=c(0:7),humanoidtype=prefixZ)
+zombiey<-rwalk1dhumanoids(Nt=7, Ni=6, mu = 0, sigma= 1, xinit = 1, timestepslocal=c(0:7),humanoidtype=prefixZ)
+
+xcoords<-rbind(humanx,zombiex)
+ycoords<-rbind(humany,zombiey)
+allcoords<-cbind(xcoords,ycoords)
+Zdim<-c(3+6,7+1,2)#humanoid,time,x-y
+W<-array(data= allcoords,
+         dim = Zdim,
+         dimnames=list(rownames(allcoords),paste0("t", c(0:7)),c("x-displacement","y-displacement"))
+)
+
+rwalk2dhumanoids<-function(Nt, Ni, mu, sigma, xinit, yinit, timestepslocal, humanoidtype="Humanoid"){
+  
+  #example usage: Hs<-rwalk2dhumanoids(Nt=ntimesteps, Ni=nS, mu=muS, sigma=sigmaS, xinit=xinitS, yinit=yinitS, timestepslocal = vtimesteps, useunif=FALSE, humanoidtype=prefixS)
+  X<-rwalk1dhumanoids(Nt=Nt, Ni=Ni, mu=mu, sigma=sigma, xinit=xinit,timestepslocal=timestepslocal,humanoidtype=humanoidtype) # get Ni rows of humanoids X co-ordinates
+  Y<-rwalk1dhumanoids(Nt=Nt, Ni=Ni, mu=mu, sigma=sigma, xinit=yinit,timestepslocal=timestepslocal,humanoidtype=humanoidtype) # get Ni rows of humanoids Y co-ordinates
   Z<-cbind(X,Y)
-  Zdim<-c(Ni,Nt+1,2)
+  Zdim<-c(Ni,Nt+1,2)#humanoid,time,x-y
   W<-array(data= Z,
            dim = Zdim,
            dimnames=list(paste(humanoidtype,c(1:Ni)),paste0("t", timestepslocal),c("x-displacement","y-displacement"))
            )
   return(W)
 }
+
 
 #linear algebra functions
 euclideandistancebetweentwomatrices<-function(H,J){
@@ -135,7 +160,7 @@ deathmatrix<-function(H,J,timestep,interfacedistance, zombiewinrate, sprime, zpr
   L<-isolateminima(pdistHJ) #isolate minima (ASSUMPTION only nearest neighbours do anything)
   x<-ifelse(runif(length(L))>zombiewinrate, sprime, zprime) #CONVENTION 2 means zombie wins, 3 means human wins (zombie doesn't), NA means do nothing
   K<-ifelse(L<interfacedistance,x,NA) #create a matrix of winners, losers, and live to fight another day-ers
-  K<-deletezero(K)
+  # K<-deletezero(K)
   return(K)
 }
 humanoiddeathlist<-function(dm, susceptiblename, zombiename, humanoidtype, sprime, zprime){
@@ -167,7 +192,7 @@ humanoidtype<-function(hmat,susceptiblename, zombiename){
 
 #plot functions
 plotoutbreakXT<-function(H,verticalaxis=1){
-  #phumanoids outbreak versus time
+  #plot humanoids outbreak versus time
   #verticalaxiss:
   #1 means plot x-displacement versus time
   #2 means plot y-displacement versus time
@@ -245,23 +270,23 @@ plotoutbreakXYall<-function(H,
   
 
   
-  s<-sum(deathmatrixlocal,na.rm =TRUE)
-  if(s > 0){
-    removaltimesteps<-c(timestep:ntimesteps+1)
-    retentiontimesteps<-c(0:timestep-1)
-    print(timestep)
-    print(deathmatrixlocal)
-    if(length(deathsH)>0){
-      removedH<-(H[deathsH,removaltimesteps,])
-      print("removed H")
-      print(removedH)
-    }
-    if(length(deathsJ)>0){
-      removedJ<-(J[deathsJ,removaltimesteps,])
-      print("removed J")
-      print(removedJ)
-    }
-  }
+  # s<-sum(deathmatrixlocal,na.rm =TRUE)
+  # if(s > 0){
+  #   removaltimesteps<-c(timestep:ntimesteps+1)
+  #   retentiontimesteps<-c(0:timestep-1)
+  #   print(timestep)
+  #   print(deathmatrixlocal)
+  #   if(length(deathsH)>0){
+  #     removedH<-(H[deathsH,removaltimesteps,])
+  #     print("removed H")
+  #     print(removedH)
+  #   }
+  #   if(length(deathsJ)>0){
+  #     removedJ<-(J[deathsJ,removaltimesteps,])
+  #     print("removed J")
+  #     print(removedJ)
+  #   }
+  # }
 
   #now start to visualise
   #get the x-y details for the matrix H
@@ -319,7 +344,7 @@ plotoutbreakXYTasgif<-function(H,
                                J,
                                criticaldistance = 0, 
                                winratez = 0.95, 
-                               outputfilename="zombieanimation.gif",
+                               outputfilename="/Users/petermoore/Documents/GitHub/ZombieEpidemic/zombieanimation.gif",
                                sprime=3,
                                zprime=2){
   #builds a gif of the zombie vs susceptible action and outputs it to the specified filename (Downloads folder)
@@ -341,80 +366,49 @@ plotoutbreakXYTasgif<-function(H,
 
 #experimental area
 #get a matrix of zombies
-Hs<-rwalk2dhumanoids(Nt=ntimesteps, Ni=nS, mu=muS, sigma=sigmaS, xinit=xinitS, yinit=yinitS, timestepslocal = vtimesteps, useunif=FALSE, humanoidtype=prefixS)
-Hz<-rwalk2dhumanoids(Nt=ntimesteps, Ni=nZ, mu=muZ, sigma=sigmaZ, xinit=xinitZ, yinit=yinitZ, timestepslocal = vtimesteps, useunif=FALSE, humanoidtype=prefixZ)
+Hs<-rwalk2dhumanoids(Nt=ntimesteps, Ni=nS, mu=muS, sigma=sigmaS, xinit=xinitS, yinit=yinitS, timestepslocal = vtimesteps, humanoidtype=prefixS)
+Hz<-rwalk2dhumanoids(Nt=ntimesteps, Ni=nZ, mu=muZ, sigma=sigmaZ, xinit=xinitZ, yinit=yinitZ, timestepslocal = vtimesteps, humanoidtype=prefixZ)
 
-plotoutbreakXYTasgif(H=Hs,J=Hz,criticaldistance = interfacedistance, winratez = interfacedistance)
+plotoutbreakXYTasgif(H=Hs,J=Hz,criticaldistance = interfacedistance, winratez = zombiewinrate)
+
+
+
+
+
 
 
 H<-Hs
 J<-Hz
-j<-243
-timestep<-j
+criticaldistance = interfacedistance 
+winratez = zombiewinrate
+outputfilename="/Users/petermoore/Documents/GitHub/ZombieEpidemic/zombieanimation.gif"
+sprime=3
+zprime=2
 
-library(memisc)
-K<-dimrename(m,1,a="first",b="second")
 
 H[1:2,1:2,1:2]
-deathmatrixlocal<-deathmatrix(H=H,
-                J=J,
-                timestep=j,
-                interfacedistance=interfacedistance,
-                zombiewinrate=zombiewinrate,
-                sprime=primeS,
-                zprime=primeZ)
-humanoidtypeH<-humanoidtype(hmat=H,susceptiblename=prefixS, zombiename=prefixZ)
-humanoidtypeJ<-humanoidtype(hmat=J,susceptiblename=prefixS, zombiename=prefixZ)
-deathsH<-humanoiddeathlist(dm = deathmatrixlocal,
-                           susceptiblename=prefixS,
-                           zombiename=prefixZ,
-                           humanoidtype=humanoidtypeH,
-                           sprime=primeS,
-                           zprime=primeZ)
 
-deathmatrixlocal
-humanoidtypeH
-humanoidtypeJ
-deathsH
-removaltimesteps<-c(timestep:ntimesteps+1)
-retentiontimesteps<-c(0:timestep-1)
 
-removedH<-(H[deathsH,removaltimesteps,])
-setdiff(H,removedH)
-ddd<-c("Susceptible 2", "Susceptible 4")
-H<-H[rownames(H) %in% ddd]
+H[1,1:2,1:2] #ignores humanoids (gives only Susceptible 1)
+H[1:2,1,1:2] #ignores time (gives only t0)
+H[1:2,1:2,1] #ignores y-axis (gives only x-displacement)
 
+myrownames<-rownames(J)
+oldnames<-c("Susceptible 2", "Zombie 3")
+newnames<-c("Rod", "Jane")
+for (i in 1:length(oldnames)){ #blimey, there has to be a more efficient way than this
+  myrownames<-replace(myrownames, myrownames == oldnames[i], newnames[i])
+}
+rownames(J)<-myrownames
 J
-# xyfootprintH<-as.matrix(H[,j,])
-# xyfootprintJ<-as.matrix(J[,j,])
-# 
-# #important step, get distances between humanoids
-# pdistHJ<-euclideandistancebetweentwomatrices(xyfootprintH, xyfootprintJ)
-# interfacedistance<-ave(pdistHJ)[1,1] #distance at which zombies infect susceptibles or susceptiles kill zombies
-# isolateminima(pdistHJ)
-
-# 
-
-# 
-
-# x<-c("Susceptible 2", "Susceptible 4")
-# y<- (Hs[,0,0])
-# intersect(x,y)
-# 
-# subset(Hs,Hs[,0,0] %in% x)
 
 
-
-
-
-
-
-
-
-
-
-
-
+nm<-rownames(J)
+nm
+startwithZombie<- nm %in% grep("^Z", nm, value = TRUE)
+nm<-subset(nm,startwithZombie)
+nm
+J[nm,,]
 
 
 

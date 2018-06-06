@@ -8,26 +8,138 @@ output: word_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
+```{r tidyup, echo=FALSE}
+#keep R tidy
+rm(list=ls()) #clear variables
+cat("\014")  #clear console
+```
+## Understanding
+This is a study of epidemiology. The basis of the study is to model the interactions between zombies and humans. The interatction between humans and zombies has previously been modelled mathematically by the below ordinary differential equations (ODE's), known as the SRZ Model[^1]:
 
-##Zombie Apocalypse in R
+S′ <- Π−βSZ−δS
+```{r eval=FALSE, echo = FALSE}
+Srate <- P - B*Si*Zi - d*Si
+```
+Z′ <- βSZ+ζR−αSZ
+```{r eval=FALSE, echo = FALSE}
+Zrate <- B*Si*Zi + G*Ri - A*Si*Zi
+```
+R′ <- δS+αSZ−ζR
+```{r eval=FALSE, echo = FALSE}
+Rrate <- d*Si + A*Si*Zi - G*Ri
+```
+Where the following variables are used:
+Π - birth rate
+δ - natural death rate 
+β - transmission rate
+ζ - resurrection rate
+α - zombie destruction rate
+And ′ signifies rate of change (e.g. S′ = dS/dt)
+```{r eval=FALSE, echo=FALSE}
+# NB anglicised versions of names used
+P <- 0 # birth rate
+d <- 0.00001 #natural death rate percent per day
+B <- 0.0095 #transmission percent per day
+G <- 0.0001 #resurrect percent per day
+A <- 0.0001 #destroy percent per day
+```
+Solving these equations using the code in Appendix One[^2], produces the below curve:
+image:![](/Users/petermoore/Documents/GitHub/ZombieEpidemic/ODESolutionPython.png)
 
-###Understanding
-This is a study of epidemiology. The basis of the study is to model the interactions between zombies and humans (aka susceptibles). The interatction between can be modelled mathematically by the below differential equation[^1]:
-S0 =  􀀀 SZ 􀀀 S
-Z0 = SZ + R 􀀀 SZ
-R0 = S + SZ 􀀀 R:
+##### Figure 1: Zombie conquest with (P=0,d=0.0001,B=0.0095,G=0.0001,A=0.0001)[^3]
 
-####Definitions
+This shows that even with nominal death and transmission rates, the zombies win.
+
+However this only tells half of the story because the SRZ model does not allow for zombies or humans to be attributed a velocity. At this point the ODE's cannot be solved.
+
+### Goal
+The goal of this project is to introduce velocity to the SRZ model and, via a series of Monte Carlo Simulations (MCS); see how Zombies and humans interact in a multitude of scenarios.
+
+
+### Definitions
+The following definitions form the essential components of the model. (Where subsequent definitions are made they will appear in **bold typeface**)
+
 - Humanoid: a human or a zombie
-- Susceptible: an uninfected human
-- Removed: a 
+- Susceptible: an uninfected Humanoid 
+- Zombification: a Susceptible Humanoid that is turned into a zombie
+- Death: a Susceptible Humanoid who dies naturally
+- Destruction: a zombie destroyed by a Humanoid
+- Removed: a dead human, a destroyed zombie 
+- Resurrection: a Removed Humanoid that is turned into a zombie 
+- Species: a human or a zombie
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+## Exploratory Data Analysis
 
-```{r cars}
-summary(cars)
+The original SRZ model allows a solution because the equations are in balance, that is Susceptibles are added to by births and reduced by death and zombification, Zombies are added to by Zombification and Resurrection but depleted by Destruction. Finally, the Removed class are added to by Zombification and Death but reduced by resurrections. 
+
+All of these principles may be preserved for the MCS model, however, additional questions need to be asked about the ways in which Humanoids move. For example, what is the average speed of a Humanoid? How does it deviate from the mean? Is this normally distributed? Are the populations geographically distinct? Is the geography bounded?
+
+To answer these the following assumptions were made:
+
+### Initial assumptions
+- Different Species of Humanoids begin at geographically distinct locations
+- Humanoids act as point particles. That is they may become arbitrarily near to one another (this allows the initial populations to start at the same grid co-ordinate per species)
+- Humanoids move in **footsteps**, with one footstep taking place in one unit of time (or **timestep**)
+- A **footpath** constitutes a set of footsteps over a series of time series, footpaths must be contiguous (i.e. no levitating!)
+- The footstep lengths are normally distrubuted and share the same mean and standard deviation per Species (the **normal distribution assumption**)
+- **Since each footstep length is mapped *per unit time* the mean footstep length is the same as a mean velocity**
+- When Humanoids of different Species get within a certain critical distance of one another there is a consequence (a human gets zombified, a zombie gets destroyed)
+- This **interface distance** is the same for both species
+- Only two Humanoids can interact at any point in time (i.e. a zombie cannot kill two humans in a single timestep)
+- Humanoids only have eyes for the nearest victim 
+- Zombies beat humans at the **Zombie win rate** a number between 0 and 1[^4]
+```{r intialconditions, echo=FALSE}
+#global parameters
+prefixS<-"Susceptible"
+prefixZ<-"Zombie"
+primeS<-3
+primeZ<-2
+
+#time parameters
+ntimesteps<-249 #time steps
+vtimesteps<-c(0:ntimesteps) #set up a zero-based vector, t, that will represent time, NB unit time in steps of one
+
+# epidemiology parameters (note that these have been anglicised from Munz et al, e.g. Π is represented as P)
+P<-0      # birth rate
+d<-0.0001  # natural death percent (per unit time)
+B<-0.0095  # transmission percent  (per unit time)
+G<-0.0001  # resurrect percent (per unit time)
+a<-0.0001  # destroy percent  (per unit time)
+
+# Zombie configuration
+xinitZ<-0 #set a starting co-ordinate for Zombies on the x-dimension
+yinitZ<-0 #set a starting co-ordinate for Zombies on the y-dimension
+nZ<-5 #initial number of Zombies
+muZ<-0 #mean footstep length for Zombies IMPORTANT: because we have unit time this is average zombie speed
+sigmaZ<-1 #standard deviation of footstep lengths for Zombies
+
+# Susceptible configuration
+xinitS<-10#set a starting co-ordinate for Susceptibles on the x-dimension
+yinitS<-10#set a starting co-ordinate for Susceptibles on the y-dimension
+nS<-6 #initial number of Susceptibles
+muS<-0 #mean footstep length for Susceptibles
+sigmaS<-1 #standard deviation of footstep lengths for Susceptibles (observation: for Susceptibles, sigmaS is akin to a drunkenness factor!)
+
+#killing parameters
+interfacedistance<-2 #distance at which zombies infect susceptibles or susceptiles kill zombies
+zombiewinrate<-0.95
+```
+## Data preparation
+As Humanoids take footsteps they tread out a footpath as defined by the average footstep length and the timestep. An average velocity (footstep length) of zero combined with the normal distribution assumption, mean that Humanoids would exhibit Brownian motion as modelled for a single particle here[^5]:
+
+```{r brownian motion in 1-d, echo=FALSE}
+#random walk functions
+rwalk1dhumanoids<-function(Nt, Ni, mu, sigma, xinit, useunif=FALSE){
+  Nlarge<-Nt*Ni # number of time steps multiplied by initial number of humanoids
+  Xt<-rep(xinit,Ni) #set of start points
+  footsteps<-rnorm(n=Nlarge,mean=mu,sd=sigma) #lets now get a super long set of footsteps
+  X<-matrix(data=footsteps,nrow=Ni,ncol=Nt) #now get a matrix where we get Nt columns for each of our Ni humanoids
+  X<-cbind(Xt,X) #now place our initial co-ordinate 
+  X<-apply(X=X,MARGIN=1,FUN=cumsum) 
+  X<-t(X) #SUBTLETY: transpose
+  return(X)
+}
 ```
 
 ## Including Plots
@@ -40,5 +152,68 @@ plot(pressure)
 
 Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
 
-##References
+## Evaluation
+The initial phase of work was concentrated on producing the zombie animation. This felt like a good approach because it allowed one to get a "feel" of the interaction between Humanoids. Observing the zombies in this way allowed the initial assumptions to be questioned: for example, it was easy to see that the average of the distribution did indeed equate to a velocity; on the other hand, the idea that the speeds of Humanoids were normally distributed was challenged. The group of humans in particular just *looked* wrong as the "weakest of the herd" were just the unluckiest. With more time the model would have been tweaked to account for this because, as is, the model effectively ignores age and genetics! I think that in reality humans would run away more quickly and this would need revisiting.
+
+I would like to have played around with the concept of interface distance because having it the same for both species would seem incorrect. In truth humans are more capable of acting at a greater distance (for example with stones, arrows, guns) so again this would need revisiting.
+
+## References
+Munz, P. et al. (2009) ‘Zombies!’, Science.
+
+##Appendix One: Original Python ODE Script
+##### zombie apocalypse modeling
+##### from http://scipy-cookbook.readthedocs.io/items/Zombie_Apocalypse_ODEINT.html
+
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy.integrate import odeint
+plt.ion()
+plt.rcParams['figure.figsize'] = 10, 8
+
+P = 0 # birth rate
+d = 0.0001 # natural death percent (per day)
+B = 0.0095 # transmission percent (per day)
+G = 0.0001 # resurect percent (per day)
+A = 0.0001 # destroy percent (per day)
+
+##### solve the system dy/dt = f(y, t)
+def f(y, t):
+ Si = y[0]
+ Zi = y[1]
+ Ri = y[2]
+ # the model equations (see Munz et al. 2009)
+ dSdt = P - B*Si*Zi - d*Si
+ dZdt = B*Si*Zi + G*Ri - A*Si*Zi
+ dRdt = d*Si + A*Si*Zi - G*Ri
+ return [dSdt, dZdt, dRdt]
+
+##### initial conditions
+S0 = 500. # initial population
+Z0 = 0 # initial zombie population
+R0 = 0 # initial death population
+y0 = [S0, Z0, R0] # initial condition vector
+t = np.linspace(0, 5., 1000) # time grid
+
+##### solve the DEs
+soln = odeint(f, y0, t)
+S = soln[:, 0]
+Z = soln[:, 1]
+R = soln[:, 2]
+
+##### plot results
+plt.figure()
+
+plt.plot(t, S, label='Living')
+plt.plot(t, Z, label='Zombies')
+plt.xlabel('Days from outbreak')
+plt.ylabel('Population')
+plt.title('Zombie Apocalypse - No Init. Dead Pop.; No New Births.')
+plt.legend(loc=0)
+
+
+
 [^1]: Munz, P. et al. (2009) ‘Zombies!’, Science.
+[^2]: http://scipy-cookbook.readthedocs.io/items/Zombie_Apocalypse_ODEINT.html
+[^3]: Using Anglicised equivalents to Greek letters (e.g. P=Π)
+[^4]: A corollary to this is that the transmission rates and destruction rates are independent 
+[^5]: This code is not identical but was inspired by the example here: http://www.phytools.org/eqg/Exercise_4.1/
