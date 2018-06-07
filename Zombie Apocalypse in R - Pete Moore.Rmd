@@ -43,7 +43,7 @@ B <- 0.0095 #transmission percent per day
 G <- 0.0001 #resurrect percent per day
 A <- 0.0001 #destroy percent per day
 ```
-Solving these equations using the code in Appendix One[^2], produces the below curve:
+Solving these equations using the code in Appendix One [^2], produces the below curve:
 image:![](/Users/petermoore/Documents/GitHub/ZombieEpidemic/ODESolutionPython.png)
 
 ##### Figure 1: Zombie conquest with (P=0,d=0.0001,B=0.0095,G=0.0001,A=0.0001)[^3]
@@ -126,7 +126,7 @@ interfacedistance<-2 #distance at which zombies infect susceptibles or susceptil
 zombiewinrate<-0.95
 ```
 ## Data preparation
-As Humanoids take footsteps they tread out a footpath as defined by the average footstep length and the timestep. An average velocity (footstep length) of zero combined with the normal distribution assumption, mean that Humanoids would exhibit Brownian motion as modelled for a single particle here[^5]:
+As Humanoids take footsteps they tread out a footpath as defined by the average footstep length and the timestep. An average velocity (footstep length) of zero combined with the normal distribution assumption, means that Humanoids  exhibit Brownian motion as modelled. By adapting code for a single particle[^5], a random walk in one-dimension was created as can be seen in appendix two[^6]
 
 ```{r brownian motion in 1-d, echo=FALSE}
 #random walk functions
@@ -141,6 +141,8 @@ rwalk1dhumanoids<-function(Nt, Ni, mu, sigma, xinit, useunif=FALSE){
   return(X)
 }
 ```
+
+
 
 ## Including Plots
 
@@ -160,7 +162,7 @@ I would like to have played around with the concept of interface distance becaus
 ## References
 Munz, P. et al. (2009) ‘Zombies!’, Science.
 
-##Appendix One: Original Python ODE Script
+## Appendix One: Original Python ODE Script
 ##### zombie apocalypse modeling
 ##### from http://scipy-cookbook.readthedocs.io/items/Zombie_Apocalypse_ODEINT.html
 
@@ -210,10 +212,14 @@ plt.ylabel('Population')
 plt.title('Zombie Apocalypse - No Init. Dead Pop.; No New Births.')
 plt.legend(loc=0)
 
-
+## Appendix Two: Random walk in one dimension
+``` {r echo = FALSE}
+rwalk1dhumanoids
+```
 
 [^1]: Munz, P. et al. (2009) ‘Zombies!’, Science.
-[^2]: http://scipy-cookbook.readthedocs.io/items/Zombie_Apocalypse_ODEINT.html
+[^2]: Original code as provided in assignment and avaialable at http://scipy-cookbook.readthedocs.io/items/Zombie_Apocalypse_ODEINT.html
 [^3]: Using Anglicised equivalents to Greek letters (e.g. P=Π)
 [^4]: A corollary to this is that the transmission rates and destruction rates are independent 
 [^5]: This code is not identical but was inspired by the example here: http://www.phytools.org/eqg/Exercise_4.1/
+[^6]: All code samples can be found inline with the text in the attached Rmarkdown project
