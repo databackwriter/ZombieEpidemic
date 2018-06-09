@@ -430,8 +430,9 @@ reconfigurepopulation<-function(Z,
     #anything with the name RemovedX was removed last time
     #now it must join the official removed class
     #this means that the name is changed to remove and the co-ordinates are locked in time
-    Z<-exhumeremoved(Z,timesteplocal,prefix="RemovedX[SZD]",replacement="Removed ")
+    Z<-exhumeremoved(Z,timesteplocal,prefix="RemovedX[ZD]",replacement="Removed ")
     Z<-exhumeremoved(Z,timesteplocal,prefix="BackFromDeadXR",replacement="Zombie ")
+    Z<-exhumeremoved(Z,timesteplocal,prefix="RemovedX[S]",replacement="Zombie ")
     Z<-exhumeremoved(Z,timesteplocal,prefix=prefix.Newborn,replacement=prefix.Susceptible, mode="start")
 
     #start with the resurrections
