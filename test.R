@@ -185,6 +185,28 @@ plotoutbreakXY<-function(H,timestep){
 
 
 
+deleterowzero<-function(M, removeNA = TRUE){
+  #takes a matrix and returns the values that match the zero for that row and leaves the rest as NA
+  Mrs<-rowSums(M, na.rm=TRUE)
+  L<-subset(M,Mrs>0)
+  return(L)
+}
+deletecolzero<-function(M, removeNA = TRUE){
+  #takes a matrix and returns the values that match the zero for that column and leaves the rest as NA
+  return(t(deleterowzero(t(M),removeNA))) #note that we transpose twice
+}
+deletezero<-function(M, removeNA = TRUE){
+  #takes a matrix and returns the values that match the zero for that row and column and leaves the rest as NA
+  return(deletecolzero(deleterowzero(M, removeNA), removeNA))
+}
+
+
+
+library(numbers)
+
+primeFactors(35)
+
+
 
 
 

@@ -158,6 +158,8 @@ Note that the `echo = FALSE` parameter was added to the code chunk to prevent pr
 ## Evaluation
 The initial phase of work was concentrated on producing the zombie animation. This felt like a good approach because it allowed one to get a "feel" of the interaction between Humanoids. Observing the zombies in this way allowed the initial assumptions to be questioned: for example, it was easy to see that the average of the distribution did indeed equate to a velocity; on the other hand, the idea that the speeds of Humanoids were normally distributed was challenged. The group of humans in particular just *looked* wrong as the "weakest of the herd" were just the unluckiest. With more time the model would have been tweaked to account for this because, as is, the model effectively ignores age and genetics! I think that in reality humans would run away more quickly and this would need revisiting.
 
+One (late discovered) limitation of the model was that there always needed to be at least two zombies (nz=2). This wasn't deemed too much of an impediment because any models with zero zombies would either wait for a resurrection to happen (nz=1!) or be benign. This left nz=2 as an outstanding issue, in this particular modelling style, this was not too problematic because of the reliance on the initial ratios of Zombies:Susceptibles rather than an absolute number (although this did lead to more iterations!).
+
 I would like to have played around with the concept of interface distance because having it the same for both species would seem incorrect. In truth humans are more capable of acting at a greater distance (for example with stones, arrows, guns) so again this would need revisiting.
 
 ## References
