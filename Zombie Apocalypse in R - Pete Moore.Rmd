@@ -89,6 +89,7 @@ To answer these the following assumptions were made:
 - Only two Humanoids can interact at any point in time (i.e. a zombie cannot kill two humans in a single timestep)
 - Humanoids only have eyes for the nearest victim 
 - Zombies beat humans at the **Zombie win rate** a number between 0 and 1[^4]
+- Newborns move instantly as per the speed of the herd (e.g. they are carried)
 ```{r intialconditions, echo=FALSE}
 #global parameters
 prefixS<-"Susceptible"

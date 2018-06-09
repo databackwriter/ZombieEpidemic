@@ -108,6 +108,81 @@ nm
 J[nm,,]
 
 
+zzzhumanoiddeathlist<-function(dm, susceptiblename, zombiename, humanoidtype, sprime, zprime){
+  # internal function purpose: take an n x m matrix of humanoids to die
+  # return a list of what's about to die
+  deathprime<-0
+  if (humanoidtype==zombiename){
+    deathprime<-sprime #if we are looking at a matrix of zombies then the sprime kills them
+  } else if (humanoidtype==susceptiblename){
+    deathprime<-zprime # and vice versa
+  } else{
+    deathprime<-NA
+  }
+  
+  dmatrowsums<-rowSums(dm, na.rm=TRUE) 
+  rowdeathlist<-subset(dmatrowsums,dmatrowsums==deathprime) 
+  rowdeathlist<-names(rowdeathlist)
+  return(rowdeathlist)
+}
+zzzhumanoidtype<-function(hmat,susceptiblename, zombiename){
+  humanoidnamesH<-rownames(hmat)
+  humanoidtypeH<-sub(" .*","",humanoidnamesH[1])
+  if(humanoidtypeH==susceptiblename){ #kill the susceptibles
+    Htype<-susceptiblename
+  } else if (humanoidtypeH==zombiename){
+    Htype<-zombiename
+  }
+}
+
+
+
+
+plotoutbreakXT<-function(H,verticalaxis=1){
+  #plot humanoids outbreak versus time
+  #verticalaxiss:
+  #1 means plot x-displacement versus time
+  #2 means plot y-displacement versus time
+  nlocal<-length(H[,1,1]) #time and displacement fixed, so variable length is number of humanoids
+  tlen<-length(H[1,,1])-1 #humanoid held constant, axis is constant (time varies)
+  tlocal<-c(0:tlen)
+  H1<-H[1,,verticalaxis]
+  H2n<-H[2:nlocal,,verticalaxis]
+  ylocal<-colnames(H[1,,])[verticalaxis] 
+  ylimlocal<-c((-1*tlen),tlen)
+  humanoidtype<-sub(" .*","",rownames(H[,1,])[verticalaxis])
+  mlocal<-paste(ylocal, "versus time for a", humanoidtype)
+  plot(x=tlocal,y=H1,type="l", xlab="time", ylab=ylocal, main=mlocal, frame.plot = FALSE, ylim = ylimlocal)
+  apply(X=H2n,MARGIN=1,FUN=lines,x=tlocal)
+  invisible(H)
+}
+plotoutbreakXY<-function(H,timestep){
+  #phumanoids outbreak for x and y displacements for a specified time
+  
+  xyfootprint<-as.matrix(H[,timestep,]) #get ourselves a nice two-D matrix
+  
+  xfootprint<-xyfootprint[,1] #a nice x-displacement vector
+  yfootprint<-xyfootprint[,2] #and a nice y-displacement vector
+  
+  nlocal<-length(xfootprint) # take length of xfootprint as our num ber of Zombies (could just as easily take y becvause time is fixed and we have an x-y for all)
+  
+  xlocal<-colnames(xyfootprint)[1] 
+  ylocal<-colnames(xyfootprint)[2]
+  
+  xlimlocal<-c(floor(min(H[,,1])),ceiling(max(H[,,1]))) #note here that we are ignoring time altogether
+  ylimlocal<-c(floor(min(H[,,2])),ceiling(max(H[,,2])))
+  
+  humanoidnames<-rownames(xyfootprint)
+  humanoidtype<-sub(" .*","",humanoidnames[1])
+  
+  collocal<-rainbow(nlocal,end=1/6)
+  
+  mlocal<-paste("x-y coordinates for ", nlocal, " ", humanoidtype, "s, at t=t", (timestep-1), sep="")
+  p<-plot(x=xfootprint,y=yfootprint,type="p", xlab=xlocal, ylab=ylocal, main=mlocal, frame.plot = FALSE,col=collocal, xlim = xlimlocal, ylim = ylimlocal)
+  # text(x=xfootprint,y=yfootprint,labels = humanoidnames, pos = 4)
+  # invisible(H)
+}
+
 
 
 
