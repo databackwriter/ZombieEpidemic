@@ -84,64 +84,49 @@ To answer these the following assumptions were made:
 - A **footpath** constitutes a set of footsteps over a series of time series, footpaths must be contiguous (i.e. no levitating!)
 - The footstep lengths are normally distrubuted and share the same mean and standard deviation per Species (the **normal distribution assumption**)
 - **Since each footstep length is mapped *per unit time* the mean footstep length is the same as a mean velocity**
-- When Humanoids of different Species get within a certain critical distance of one another there is a consequence (a human gets zombified, a zombie gets destroyed)
-- This **interface distance** is the same for both species
+- When Humanoids of different Species get within a certain critical distance of one another there is a consequence (a human gets zombified, a zombie gets destroyed). This is the **consequences assumption**.
+- This is a zero-sum game: a human gets Zombified or a zombie gets destroyed. This is the **zero-sum assumption**.
+- This **critical distance** is the same for both species
 - Only two Humanoids can interact at any point in time (i.e. a zombie cannot kill two humans in a single timestep)
 - Humanoids only have eyes for the nearest victim 
-- Zombies beat humans at the **Zombie win rate** a number between 0 and 1[^4]
+- Zombies beat humans at the **Zombie Win Rate** a number between 0 and 1[^4]
 - Newborns move instantly as per the speed of the herd (e.g. they are carried)
 ```{r intialconditions, echo=FALSE}
-#global parameters
-prefixS<-"Susceptible"
-prefixZ<-"Zombie"
-primeS<-3
-primeZ<-2
-
-#time parameters
-ntimesteps<-249 #time steps
-vtimesteps<-c(0:ntimesteps) #set up a zero-based vector, t, that will represent time, NB unit time in steps of one
-
+#####global constants
+prefix.Susceptible<-"Susceptible"
+prefix.Zombie<-"Zombie"
+prefix.Removed<-"Removed"
+prefix.Newborn<-"ProtoLiving"
+prefix.Resurrected<-"BackFromDead"
+prime.SusceptibleWins<-3
+prime.ZombieWins<-2
+prime.Resurrection<-5
+prime.NaturalDeath<-7
+#global (time) parameters
+time.ntimesteps<-999  #time steps
+time.vtimesteps<-c(0:time.ntimesteps) #set up a zero-based vector, t, that will represent time, NB unit time in steps of one
 # epidemiology parameters (note that these have been anglicised from Munz et al, e.g. Π is represented as P)
-P<-0      # birth rate
-d<-0.0001  # natural death percent (per unit time)
-B<-0.0095  # transmission percent  (per unit time)
-G<-0.0001  # resurrect percent (per unit time)
-a<-0.0001  # destroy percent  (per unit time)
-
-# Zombie configuration
-xinitZ<-0 #set a starting co-ordinate for Zombies on the x-dimension
-yinitZ<-0 #set a starting co-ordinate for Zombies on the y-dimension
-nZ<-5 #initial number of Zombies
-muZ<-0 #mean footstep length for Zombies IMPORTANT: because we have unit time this is average zombie speed
-sigmaZ<-1 #standard deviation of footstep lengths for Zombies
-
-# Susceptible configuration
-xinitS<-10#set a starting co-ordinate for Susceptibles on the x-dimension
-yinitS<-10#set a starting co-ordinate for Susceptibles on the y-dimension
-nS<-6 #initial number of Susceptibles
-muS<-0 #mean footstep length for Susceptibles
-sigmaS<-1 #standard deviation of footstep lengths for Susceptibles (observation: for Susceptibles, sigmaS is akin to a drunkenness factor!)
-
-#killing parameters
-interfacedistance<-2 #distance at which zombies infect susceptibles or susceptiles kill zombies
-zombiewinrate<-0.95
+config.model<-configuration.SRZModel(P=0,d=0.0001,B=0.0095,G=0.0001,a=0.0001,rcritical=1,zombiewinratio=0.95)
+config.Zombie<-configuration.Humanoid(xinit= 0,yinit=0,n=2,mu=0,sigma=1)# Zombie configuration
+config.Susceptible<-configuration.Humanoid(xinit=10,yinit=10,n=500,mu=0,sigma=1)# Susceptible configuration
+config.plot<-config.plot.global()#axes configuration for gif
 ```
-## Data preparation
-As Humanoids take footsteps they tread out a footpath as defined by the average footstep length and the timestep. An average velocity (footstep length) of zero combined with the normal distribution assumption, means that Humanoids  exhibit Brownian motion as modelled. By adapting code for a single particle[^5], a random walk in one-dimension was created as can be seen in appendix two[^6]
+## Data model
+As Humanoids take footsteps they tread out a footpath as defined by the average footstep length and the timestep. An average velocity (footstep length) of zero combined with the normal distribution assumption, means that Humanoids  exhibit Brownian motion as modelled. By adapting code for a single particle[^5], random walks in one- and two-dimensions were created as can be seen in appendices two[^6] and three respectively.
 
-```{r brownian motion in 1-d, echo=FALSE}
-#random walk functions
-rwalk1dhumanoids<-function(Nt, Ni, mu, sigma, xinit, useunif=FALSE){
-  Nlarge<-Nt*Ni # number of time steps multiplied by initial number of humanoids
-  Xt<-rep(xinit,Ni) #set of start points
-  footsteps<-rnorm(n=Nlarge,mean=mu,sd=sigma) #lets now get a super long set of footsteps
-  X<-matrix(data=footsteps,nrow=Ni,ncol=Nt) #now get a matrix where we get Nt columns for each of our Ni humanoids
-  X<-cbind(Xt,X) #now place our initial co-ordinate 
-  X<-apply(X=X,MARGIN=1,FUN=cumsum) 
-  X<-t(X) #SUBTLETY: transpose
-  return(X)
-}
-```
+The analogy wiht brownian motion is non-trivial. A the heart of the Brownian motion algorithm is a normal distribution. The humanoids movements are therefore centred around a mean and standard deviation and these have real world meainings.  Namely, the standard deviation represents the footstep length of the Humanoid and the mean the direction of motion in a two-dimensional plane.  Together they may be referenced as a drift velocity.
+
+The "brownian motion code"[^7], then, allows the depiction of a Humanoid and its velocity. By embellishing this with an initial position in the x-y plane it is possible to separate the two populations in space, by iteratively calling the algorithm the Humanoids can move in space and time.[^8]
+
+The below animation[^9] visualises the net effect for one iteration of the algorithm.  The Zombies (bottom left) walk randomly as do the humans in the top left. Since the mean is set to zero the random walk leads to each Humanoid drifting to the square root of t (for timestep t)[^10].  Since the direction of this is random, this leads to the two populations interacting. As soon as they are within a **critical distance** of one another the **consequences assumption** means that soemting will happend and the **zero-sum assumption** means this is bad news for one of the Humanoids. The animation shows the humans (red) being attacked and turning into zombies. And vice-versa (although this is rare because we have set a high **Zombie Win Rate**).  Every so often we see a Resurrection occur (green), a natural human death (black) or a natural birth (pink).
+
+image:![](/Users/petermoore/Documents/GitHub/ZombieEpidemic/zombieanimationillustrative.gif)
+##### Figure 2: Zombie conquest with (P=0.001,d=0.001,G=0.0001,rcritical=1,zombiewinratio=0.95)
+
+### Comparison to Munz et al
+Where the code in figure 1 may be presented as absolute, here we have a stochastic model and therefore need to run several iterations. In the first instance, the model was executed with many 
+
+
 
 
 
@@ -164,7 +149,11 @@ I would like to have played around with the concept of interface distance becaus
 
 ## References
 Munz, P. et al. (2009) ‘Zombies!’, Science.
-
+## Appendix Zero: Coding Environment
+The model was built using R-base version 3.4.r ran on RStudio 1.1.432 launched from Anaconda Navigator 1.8.7.  
+The following named additional libraries were used: matrixStats, animation, pdist for the purposes of: linear algebra, building the gif file, and calculating the euclidean distance between two matrices respectively.
+For the buildig of the OLAP cube SQL Server 2017 was used with SQL Server Management Studio v17.6 and SQL Server Analysis Services 2017 run from Visual Studio 2015.
+Where R code was ran form SQL it was done as an external script; these external scripts were built in RStudio originally and where they appear herein do not need reading.
 ## Appendix One: Original Python ODE Script
 ##### zombie apocalypse modeling
 ##### from http://scipy-cookbook.readthedocs.io/items/Zombie_Apocalypse_ODEINT.html
@@ -217,12 +206,19 @@ plt.legend(loc=0)
 
 ## Appendix Two: Random walk in one dimension
 ``` {r echo = FALSE}
-rwalk1dhumanoids
+print(rwalk1dhumanoids)
 ```
-
+## Appendix Three: Random walk in two dimensions
+``` {r echo = FALSE}
+print(rwalk2dhumanoids)
+```
 [^1]: Munz, P. et al. (2009) ‘Zombies!’, Science.
 [^2]: Original code as provided in assignment and avaialable at http://scipy-cookbook.readthedocs.io/items/Zombie_Apocalypse_ODEINT.html
 [^3]: Using Anglicised equivalents to Greek letters (e.g. P=Π)
 [^4]: A corollary to this is that the transmission rates and destruction rates are independent 
 [^5]: This code is not identical but was inspired by the example here: http://www.phytools.org/eqg/Exercise_4.1/
 [^6]: All code samples can be found inline with the text in the attached Rmarkdown project
+[^7]: The function rwalk1dhumanoids
+[^8]: A note on space and time in this model: since all incremental steps are relative to one another, this means that, just like the Ordnance Survey, we never have to specify a unit of time or space. This however would be challenged were we to bring the real world into it, for example by including latency of infection, or arrival of weaponry.
+[^9]: The animation is also provided as a gif in the attached documentation and I will cry if you don't watch it.
+[^10]: TODO Find reference

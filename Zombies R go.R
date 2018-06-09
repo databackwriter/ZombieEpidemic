@@ -8,69 +8,7 @@ prime.SusceptibleWins<-3
 prime.ZombieWins<-2
 prime.Resurrection<-5
 prime.NaturalDeath<-7
-#global (time) parameters
-time.ntimesteps<-9999  #time steps
-time.vtimesteps<-c(0:time.ntimesteps) #set up a zero-based vector, t, that will represent time, NB unit time in steps of one
-# epidemiology parameters (note that these have been anglicised from Munz et al, e.g. Π is represented as P)
-config.model<-configuration.SRZModel(P=0,d=0.0001,B=0.0095,G=0.0001,a=0.0001,rcritical=1,zombiewinratio=0.95)
-config.Zombie<-configuration.Humanoid(xinit= 0,yinit=0,n=2,mu=0,sigma=1)# Zombie configuration
-config.Susceptible<-configuration.Humanoid(xinit=10,yinit=10,n=500,mu=0,sigma=1)# Susceptible configuration
-config.plot<-config.plot.global()#axes configuration for gif
-
-#####zombie playground :-)#####
-m.M<-model.run.params(S.params = config.Susceptible, Z.params = config.Zombie)
-
-head(m.M)
-time.axis<-time.vtimesteps[1:length(m.M[,"ZombieCount"])]
-p<-plot(x=time.axis,y=m.M[,"SusceptibleCount"],type="l", col="blue",xlab="time", ylab="Humanoid Count", main="Zombies vs Susceptibles", frame.plot = FALSE,xlim=c(0,length(time.vtimesteps)),ylim=c(0,max(m.M)))
-p<-lines(x=time.axis,y=m.M[,"ZombieCount"],type="l", col="red")
-p<-legend("bottom", c("Susceptibles", "Zombies"), xpd = TRUE, horiz = TRUE, 
-       inset = c(0, 0), pch=15,bty = "n", col = c("blue","red"), cex = 0.5)
-
-
-
-#####old test area#####
-S.params=config.Susceptible
-Z.params=config.Zombie
-outputfilename=config.plot$outputfilename
-# ){
-
-Ni=S.params["n"]
-xinit<-S.params["xinit"]
-yinit<-S.params["yinit"]
-Xt<-rep(xinit,Ni) #set of start points (one for each humanoid)
-Yt<-rep(yinit,Ni) #set of start points (one for each humanoid)
-Z<-rwalk2dhumanoids(
-x=S.params,
-Ni,
-Xt,
-Yt,
-humanoidtype=prefix.Susceptible,
-startind = 1)
-
-Ni=Z.params["n"]
-xinit<-Z.params["xinit"]
-yinit<-Z.params["yinit"]
-Xt<-rep(xinit,Ni) #set of start points (one for each humanoid)
-Yt<-rep(yinit,Ni) #set of start points (one for each humanoid)
-startind<-length(Z[,1,1])+1
-Z1<-rwalk2dhumanoids(
-x=Z.params,
-Ni,
-Xt,
-Yt,
-humanoidtype=prefix.Zombie,
-startind=startind)
-
-#combine them to get a humanoid array
-Z<-arrayunion(Z,Z1)
-Z<-plotoutbreakXYTasgif(Z,
-              S.params,
-              Z.params,
-              unleashplot = TRUE)
-
-
-#####tidy up R#####
+#####keep R tody#####
 rm(list=ls()) #clear variables
 cat("\014")  #clear console
 #####configuration area####
@@ -104,7 +42,7 @@ configuration.Humanoid<-function(xinit,#set a starting co-ordinate for humanoids
               "sigma")
   return(x)
 }
-config.plot.global<-function(outputfilename='/Users/petermoore/Documents/GitHub/ZombieEpidemic/zombieanimation.gif'){
+config.plot.global<-function(outputfilename="/Users/peterfmoore/Documents/GitHub/ZombieEpidemic/zombieanimation.gif"){
   #define axes limits on the whole data set
   xmin<-min(config.Susceptible["xinit"], config.Zombie["xinit"])
   ymin<-min(config.Susceptible["yinit"], config.Zombie["yinit"])
@@ -130,64 +68,87 @@ model.timestep.assessment<-function(Scount,Zcount){
 model.run.params<-function(
   S.params,
   Z.params,
-  outputfilename=config.plot$outputfilename
+  outputfilename=config.plot$outputfilename,
+  mode="matrix",
+  iterations=c(1:1)
 ){
-  
-  #####setup####
-  Ni=S.params["n"]
-  xinit<-S.params["xinit"]
-  yinit<-S.params["yinit"]
-  Xt<-rep(xinit,Ni) #set of start points (one for each humanoid)
-  Yt<-rep(yinit,Ni) #set of start points (one for each humanoid)
-  Z<-rwalk2dhumanoids(
-    x=S.params,
-    Ni,
-    Xt,
-    Yt,
-    humanoidtype=prefix.Susceptible,
-    startind = 1)
-  
-  Ni=Z.params["n"]
-  xinit<-Z.params["xinit"]
-  yinit<-Z.params["yinit"]
-  Xt<-rep(xinit,Ni) #set of start points (one for each humanoid)
-  Yt<-rep(yinit,Ni) #set of start points (one for each humanoid)
-  startind<-length(Z[,1,1])+1
-  Z1<-rwalk2dhumanoids(
-    x=Z.params,
-    Ni,
-    Xt,
-    Yt,
-    humanoidtype=prefix.Zombie,
-    startind=startind)
-  #combine them to get a humanoid array
-  Z<-arrayunion(Z,Z1)
-  #####iterate#####
-  
-  m.M<- matrix(data=NA,nrow = length(time.vtimesteps),ncol=2,dimnames = list(paste0("t",time.vtimesteps),c("SusceptibleCount", "ZombieCount")))
-  m.M["t0",]<-c(S.params["n"],Z.params["n"])
-  for (i in time.vtimesteps){
-    j<-i+1
+  #runs a model of zombies atacking humans and vice versa, has two modes:
+  #1. matrix: the default, produces a matrix of Zombie and Susceptible ubers at each timestep
+  #2. gif: maps the same information in a gif animation
+  if (mode=="matrix"){
     
-    #for each timestep we need to remove any humanoids that get too near, too born, or too tired (i.e. they die)
-    Z<-reconfigurepopulation(Z=Z,
-                             S.params = S.params,
-                             Z.params = Z.params,
-                             timesteplocal=j)
-    #look at just the suceptibles
-    m.Susceptible<-arrayStartWith(Z,prefix.Susceptible)
-    #look at just the zombies
-    m.Zombie<-arrayStartWith(Z,prefix.Zombie)
-    m.Susceptible.count<-length(rownames(m.Susceptible))
-    m.Zombie.count<-length(rownames(m.Zombie))
-    m.M[j,]<-c(m.Susceptible.count,m.Zombie.count)
-    x<-(paste0("Final timestep recorded at t=t",j))
-    if(model.timestep.assessment(m.Susceptible.count,m.Zombie.count)){
-      break #if there are no zombies or suscpetibles left then leave
-    }
+    p<-plot(x=c(),y=c(),type="l", col="blue",xlab="time", ylab="Humanoid Count", main="Zombies vs Susceptibles",
+            frame.plot = FALSE,xlim=c(0,length(time.vtimesteps)),ylim=c(0,(S.params["n"]+Z.params["n"])))
+    p<-legend("bottom", c("Susceptibles", "Zombies"), xpd = TRUE, horiz = TRUE, 
+              inset = c(0, 0), pch=15,bty = "n", col = c("blue","red"), cex = 0.5)
   }
-  print(x)
-  m.M<-subset(m.M,rowSums(m.M)>=0)
+  for(mi in iterations){ 
+   #####setup####
+    Ni=S.params["n"]
+    xinit<-S.params["xinit"]
+    yinit<-S.params["yinit"]
+    Xt<-rep(xinit,Ni) #set of start points (one for each humanoid)
+    Yt<-rep(yinit,Ni) #set of start points (one for each humanoid)
+    Z<-rwalk2dhumanoids(
+      x=S.params,
+      Ni,
+      Xt,
+      Yt,
+      humanoidtype=prefix.Susceptible,
+      startind = 1)
+    
+    Ni=Z.params["n"]
+    xinit<-Z.params["xinit"]
+    yinit<-Z.params["yinit"]
+    Xt<-rep(xinit,Ni) #set of start points (one for each humanoid)
+    Yt<-rep(yinit,Ni) #set of start points (one for each humanoid)
+    startind<-length(Z[,1,1])+1
+    Z1<-rwalk2dhumanoids(
+      x=Z.params,
+      Ni,
+      Xt,
+      Yt,
+      humanoidtype=prefix.Zombie,
+      startind=startind)
+    #combine them to get a humanoid array
+    Z<-arrayunion(Z,Z1)
+    #####iterate#####
+    m.M<- matrix(data=NA,nrow = length(time.vtimesteps),ncol=2,dimnames = list(paste0("t",time.vtimesteps),c("SusceptibleCount", "ZombieCount")))
+    m.M["t0",]<-c(S.params["n"],Z.params["n"])
+    if (mode=="matrix"){
+      for (i in time.vtimesteps){
+        j<-i+1
+        
+        #for each timestep we need to remove any humanoids that get too near, too born, or too tired (i.e. they die)
+        Z<-reconfigurepopulation(Z=Z,
+                                 S.params = S.params,
+                                 Z.params = Z.params,
+                                 timesteplocal=j)
+        #look at just the suceptibles
+        m.Susceptible<-arrayStartWith(Z,prefix.Susceptible)
+        #look at just the zombies
+        m.Zombie<-arrayStartWith(Z,prefix.Zombie)
+        m.Susceptible.count<-length(rownames(m.Susceptible))
+        m.Zombie.count<-length(rownames(m.Zombie))
+        m.M[j,]<-c(m.Susceptible.count,m.Zombie.count)
+        x<-(paste0("Final timestep recorded at t=t",j))
+        if(model.timestep.assessment(m.Susceptible.count,m.Zombie.count)){
+          break #if there are no zombies or suscpetibles left then leave
+        }
+      }
+      print(x)
+      time.axis<-time.vtimesteps[1:length(time.vtimesteps)]
+      m.M<-subset(m.M,rowSums(m.M)>=0)
+      p<-lines(x=time.axis,y=m.M[,"SusceptibleCount"],type="l", col="blue")
+      p<-lines(x=time.axis,y=m.M[,"ZombieCount"],type="l", col="red")
+  
+      } else if (mode=="gif"){
+        Z<-plotoutbreakXYTasgif(Z,
+                                S.params,
+                                Z.params,
+                                unleashplot = TRUE)
+      }
+  }
   return(m.M)
 }
 
@@ -311,7 +272,7 @@ matrixnn<-function(K){
 }
 #####repopulation area####
 deathmatrix<-function(Z,timestep){
-  # a matrix of zombie winners (2's), zombie losers (3's), and live to fight another day-ers (NA's)
+  # a matrix of zombie winners (2s), zombie losers (3s), and live to fight another day-ers (NAs)
   # NB it is important that these numbers are prime.SusceptibleWins
   interfacedistance = config.model["rcritical"]
   zombiewinrate = config.model["zombiewinratio"]
@@ -325,7 +286,7 @@ deathmatrix<-function(Z,timestep){
   #nearest neighbour killings
   pdistHJ<-euclideandistancebetweentwomatrices(xyfootprintH, xyfootprintJ)
   L<-isolateminima(pdistHJ) #isolate minima (ASSUMPTION only nearest neighbours do anything)
-  x<-ifelse(runif(length(L))>zombiewinrate, prime.SusceptibleWins, prime.ZombieWins) #CONVENTION 2 means zombie wins, 3 means human wins (zombie doesn't), NA means do nothing
+  x<-ifelse(runif(length(L))>zombiewinrate, prime.SusceptibleWins, prime.ZombieWins) #CONVENTION 2 means zombie wins, 3 means human wins (zombie doesnt), NA means do nothing
   K<-ifelse(L<interfacedistance,x,NA) #create a matrix of winners, losers, and live to fight another day-ers
 
 
@@ -336,8 +297,13 @@ deathmatrix<-function(Z,timestep){
 }
 deatmatrixisolatehumanoids<-function(deathmatrixlocal,deathprime){
   dmatrowsums<-rowSums(deathmatrixlocal, na.rm=TRUE)
-  namelist<-subset(dmatrowsums,dmatrowsums==deathprime)
+  namelist<-(subset(dmatrowsums,dmatrowsums==deathprime))
   namelist<-names(namelist)
+
+  if (length(subset(namelist,namelist=="x-displacement"))+length(subset(namelist,namelist=="y-displacement"))>0){
+    namelist<-c()
+  }
+
   return(namelist)
 }
 reconfigurepopulation.changenames<-function(Z,namelist,prefixfind,prefixreplace){
@@ -364,14 +330,15 @@ reconfigurepopulation.MCSnames<-function(Z,prefix,r,mode="names"){
   }
   return(x)
 }
-reconfigurepopulation.introduce<-function(Z,S.params,Ni,Xt,Yt,startind,humanoidtype){
+reconfigurepopulation.introduce<-function(Z,S.params,Ni,Xt,Yt,startind,humanoidtype,humanoidnames){
   Z1<-rwalk2dhumanoids(
     x=S.params,
     Ni,
     Xt,
     Yt,
     humanoidtype,
-    startind)
+    startind,
+    humanoidnames)
   unames<-union(rownames(Z),rownames(Z1))
   Z<-arrayunion(Z,Z1)
   rownames(Z)<-unames
@@ -379,26 +346,23 @@ reconfigurepopulation.introduce<-function(Z,S.params,Ni,Xt,Yt,startind,humanoidt
   return(Z)
 }
 reconfigurepopulation.revive<-function(Z,Zparams,Ni,Xt,Yt,startind,humanoidtype,humanoidnames,offset,timesteplocal){
-
   K<-rwalk2dhumanoids(
     x=Zparams,
-    Ni,
-    Xt,
-    Yt,
-    humanoidtype,
+    Ni=Ni,
+    Xt=Xt,
+    Yt=Yt,
+    humanoidtype=humanoidtype,
     startind,
     humanoidnames=humanoidnames,
     offset=offset)
   
   rownames(K)<-humanoidnames
-  
   Knames<-rownames(K)
   vt<-paste0("t",(timesteplocal-1):(length(time.vtimesteps)-1))
   
   for (i in (1:2)){
     Z[Knames,vt,i]<-K[Knames,vt,i]
   }
-  
   return(Z)
 }
 
@@ -406,7 +370,7 @@ exhumeremoved<-function(Z,timesteplocal,prefix,replacement,mode="stun"){
   #when humanoids are removed something happens to their position
   #the mode handles this:
   #mode="stun"=>dead humanoids stay still so they get stuck with the x-y of their last known whereabouts for eternity
-  #mode="start"=>newborns already have their co-ordinates so we don't need to do anything
+  #mode="start"=>newborns already have their co-ordinates so we dont need to do anything
   #mode="revive"=>resurrected were previously stunned so they need a new set of coords
   K<-arrayStartWith(Z,prefix)
   if(matrixnn(K)){
@@ -432,7 +396,7 @@ reconfigurepopulation<-function(Z,
     #this means that the name is changed to remove and the co-ordinates are locked in time
     Z<-exhumeremoved(Z,timesteplocal,prefix="RemovedX[ZD]",replacement="Removed ")
     Z<-exhumeremoved(Z,timesteplocal,prefix="BackFromDeadXR",replacement="Zombie ")
-    Z<-exhumeremoved(Z,timesteplocal,prefix="RemovedX[S]",replacement="Zombie ")
+    Z<-exhumeremoved(Z,timesteplocal,prefix="RemovedX[S]",replacement="Zombie ", mode="revive")
     Z<-exhumeremoved(Z,timesteplocal,prefix=prefix.Newborn,replacement=prefix.Susceptible, mode="start")
 
     #start with the resurrections
@@ -443,7 +407,7 @@ reconfigurepopulation<-function(Z,
       Yt<-Z[introducednames.Zombies.Resurrected,timesteplocal,2]
       startind<-1
       humanoidtype=prefix.Resurrected
-      humanoidnames<-introducednames.Zombies.Resurrected #build a new random walk for these guys but update don't insert
+      humanoidnames<-introducednames.Zombies.Resurrected #build a new random walk for these guys but update dont insert
       offset<-max(timesteplocal-1,0)
       Z<-reconfigurepopulation.revive(Z=Z,Zparams=Z.params,Ni=Ni,Xt=Xt,Yt=Yt,startind=startind,humanoidtype=humanoidtype,humanoidnames=humanoidnames,offset=offset,timesteplocal=timesteplocal)
       Z<-reconfigurepopulation.changenames(Z=Z,namelist=introducednames.Zombies.Resurrected,prefixfind=prefix.Removed,prefixreplace="BackFromDeadXR")
@@ -455,10 +419,25 @@ reconfigurepopulation<-function(Z,
     if(s > 0){
       #rename the removed class with a placeholder name of RemovedX
       deathnames.Susceptibles<-deatmatrixisolatehumanoids(deathmatrixlocal,prime.ZombieWins)
-      Z<-reconfigurepopulation.changenames(Z=Z,namelist=deathnames.Susceptibles,prefixfind=prefix.Susceptible,prefixreplace="RemovedXS")
+      # print(deathnames.Susceptibles)
+      if (length(deathnames.Susceptibles)>0){
+        # print(deathnames.Susceptibles)
+        # Ni<-length(deathnames.Susceptibles)
+        # Xt<-Z[deathnames.Susceptibles,timesteplocal,1]
+        # Yt<-Z[deathnames.Susceptibles,timesteplocal,2]
+        # startind<-1
+        # humanoidtype="Removed"
+        # humanoidnames<-deathnames.Susceptibles #build a new random walk for these guys but update dont insert
+        # offset<-max(timesteplocal-1,0)
+        # Z<-reconfigurepopulation.revive(Z=Z,Zparams=Z.params,Ni=Ni,Xt=Xt,Yt=Yt,startind=startind,humanoidtype=humanoidtype,humanoidnames=deathnames.Susceptibles,offset=offset,timesteplocal=timesteplocal)
+        Z<-reconfigurepopulation.changenames(Z=Z,namelist=deathnames.Susceptibles,prefixfind=prefix.Susceptible,prefixreplace="RemovedXS")
+      }
+      
       deathnames.Zombies<-deatmatrixisolatehumanoids(t(deathmatrixlocal),prime.SusceptibleWins)
-      Z<-reconfigurepopulation.changenames(Z=Z,namelist=deathnames.Zombies,prefixfind=prefix.Zombie,prefixreplace="RemovedXZ")
-    }
+      if(length(deathnames.Zombies)>0){
+        Z<-reconfigurepopulation.changenames(Z=Z,namelist=deathnames.Zombies,prefixfind=prefix.Zombie,prefixreplace="RemovedXZ")
+        }
+      }
 
     #nautral deaths
     deathnames.Susceptibles.Natural<-reconfigurepopulation.MCSnames(Z=Z,prefix=prefix.Susceptible,r=config.model["d"])
@@ -468,6 +447,7 @@ reconfigurepopulation<-function(Z,
     
     #natural births
     introducednames.Susceptibles.Natural<-reconfigurepopulation.MCSnames(Z=Z,prefix=prefix.Susceptible,r=config.model["P"],mode="numbers")
+    introducednames.Susceptibles.Natural.Names<-reconfigurepopulation.MCSnames(Z=Z,prefix=prefix.Susceptible,r=config.model["P"])
     if(introducednames.Susceptibles.Natural>0){#SUBTLETY: length function omitted
       Ni<-introducednames.Susceptibles.Natural
       xinit<-S.params["xinit"]
@@ -475,8 +455,9 @@ reconfigurepopulation<-function(Z,
       Xt<-rep(xinit,Ni) #set of start points (one for each humanoid)
       Yt<-rep(yinit,Ni) #set of start points (one for each humanoid)
       startind<-length(Z[,1,1])+1
-      humanoidtype=prefix.Newborn
-      Z<-reconfigurepopulation.introduce(Z,Ni,Xt,Yt,startind,humanoidtype)
+      humanoidtype<-prefix.Newborn
+      humanoidnames<-introducednames.Susceptibles.Natural.Names
+      Z<-reconfigurepopulation.introduce(Z,S.params,Ni,Xt,Yt,startind,humanoidtype, humanoidnames)
     }
  
 
@@ -525,8 +506,8 @@ plotoutbreakXYall<-function(Z,
   #and those back from the dead
   m.Back<-arrayStartWith(Z,prefix.Resurrected)
 
-  susplot<-plotsub(m.Susceptible,timestep = timestep,singlecolour = "yellow")
-  zomplot<-plotsub(m.Zombie,timestep = timestep,singlecolour = "purple")
+  susplot<-plotsub(m.Susceptible,timestep = timestep,singlecolour = "blue")
+  zomplot<-plotsub(m.Zombie,timestep = timestep,singlecolour = "red")
 
 
   #generic
@@ -550,7 +531,7 @@ plotoutbreakXYall<-function(Z,
   # }
   
   if(matrixnn(m.Death.Susceptibles.Killed)){
-    justplot<-plotsub(m.Death.Susceptibles.Killed, timestep = timestep,singlecolour = "yellow")#plotsub(plotmatrix=m.Death,timestep = timestep,singlecolour = "red")
+    justplot<-plotsub(m.Death.Susceptibles.Killed, timestep = timestep,singlecolour = "blue")#plotsub(plotmatrix=m.Death,timestep = timestep,singlecolour = "red")
     points(x=justplot$xfootprint,y=justplot$yfootprint,type="p", col=justplot$collocal, pch=8, cex=2)
   }
   
@@ -560,7 +541,7 @@ plotoutbreakXYall<-function(Z,
   }
   
   if(matrixnn(m.Death.Zombies.Killed)){
-    justplot<-plotsub(m.Death.Zombies.Killed, timestep = timestep,singlecolour = "purple")#plotsub(plotmatrix=m.Death,timestep = timestep,singlecolour = "red")
+    justplot<-plotsub(m.Death.Zombies.Killed, timestep = timestep,singlecolour = "red")#plotsub(plotmatrix=m.Death,timestep = timestep,singlecolour = "red")
     points(x=justplot$xfootprint,y=justplot$yfootprint,type="p", col=justplot$collocal, pch=8, cex=2)
   }
    
@@ -579,9 +560,8 @@ plotoutbreakXYall<-function(Z,
     points(x=backplot$xfootprint,y=backplot$yfootprint,type="p", col=backplot$collocal, pch=6, cex=1)
   }
   
-  
-    #legend("bottom", c("Zombies", "Susceptible", "Removed", "Susceptible Killed", "Susceptible Dies Naturally", "Zombie Killed"), col=c("purple", "yellow", "black", "yellow", "black", "purple"), ncol=6,bty = "n",pch=c(15,19,13,8,8,8))
-
+  legend("bottom", c("Susceptibles", "Zombies", "Removed", "Birth", "Resurrection"), xpd = TRUE, horiz = TRUE, 
+         inset = c(0, 0),bty = "n", col = c("blue","red", "black", "pink", "green"), cex = 0.5,pch=c(19,15,13,8,8))
 }
 
 plotoutbreakXYTasgif<-function(Z,
@@ -620,7 +600,7 @@ plotoutbreakXYTasgif<-function(Z,
 
     return(Z)
 }
-#####fin#####
+#####finish prep#####
 print(warnings())
 
 
@@ -628,3 +608,17 @@ print(warnings())
 
 
 
+
+
+#####have some fun
+time.ntimesteps<-99  #time steps
+time.vtimesteps<-c(0:time.ntimesteps) #set up a zero-based vector, t, that will represent time, NB unit time in steps of one
+# epidemiology parameters (note that these have been anglicised from Munz et al, e.g. Π is represented as P)
+config.model<-configuration.SRZModel(P=0,d=0.0001,B=0.0095,G=0.0001,a=0.0001,rcritical=1,zombiewinratio=0.95)
+config.Susceptible<-configuration.Humanoid(xinit=10,yinit=10,n=500,mu=0,sigma=1)# Susceptible configuration
+config.Zombie<-configuration.Humanoid(xinit= 0,yinit=0,n=2,mu=0,sigma=1)# Zombie configuration
+config.plot<-config.plot.global()#axes configuration for gif
+
+#zombie playground :-)#
+m.M<-model.run.params(S.params = config.Susceptible, Z.params = config.Zombie, mode="matrix", iterations = c(1:100))
+m.M<-model.run.params(S.params = config.Susceptible, Z.params = config.Zombie, mode="gif")
