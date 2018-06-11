@@ -1,6 +1,4 @@
-#####keep R tidy#####
-rm(list=ls()) #clear variables
-cat("\014")  #clear console
+﻿DECLARE @BigRs NVARCHAR(MAX)= '
 #####global constants
 prefix.Susceptible<-"Susceptible"
 prefix.Zombie<-"Zombie"
@@ -70,19 +68,17 @@ model.run.params<-function(
   Z.params,
   outputfilename=config.plot$outputfilename,
   mode="matrix",
-  plot=FALSE,
   iterations=c(1:1)
 ){
   #runs a model of zombies atacking humans and vice versa, has two modes:
   #1. matrix: the default, produces a matrix of Zombie and Susceptible ubers at each timestep
   #2. gif: maps the same information in a gif animation
   if (mode=="matrix"){
-    if (plot){
+    
     p<-plot(x=c(),y=c(),type="l", col="blue",xlab="time", ylab="Humanoid Count", main="Zombies vs Susceptibles",
             frame.plot = FALSE,xlim=c(0,length(time.vtimesteps)),ylim=c(0,(S.params["n"]+Z.params["n"])))
     p<-legend("bottom", c("Susceptibles", "Zombies"), xpd = TRUE, horiz = TRUE, 
               inset = c(0, 0), pch=15,bty = "n", col = c("blue","red"), cex = 0.5)
-    }
   }
   for(mi in iterations){ 
    #####setup####
@@ -117,35 +113,33 @@ model.run.params<-function(
     #####iterate#####
     m.M<- matrix(data=NA,nrow = length(time.vtimesteps),ncol=2,dimnames = list(paste0("t",time.vtimesteps),c("SusceptibleCount", "ZombieCount")))
     m.M["t0",]<-c(S.params["n"],Z.params["n"])
-    tstep<-0
     if (mode=="matrix"){
       for (i in time.vtimesteps){
-        tstep<-i+1
+        j<-i+1
         
         #for each timestep we need to remove any humanoids that get too near, too born, or too tired (i.e. they die)
         Z<-reconfigurepopulation(Z=Z,
                                  S.params = S.params,
                                  Z.params = Z.params,
-                                 timesteplocal=tstep)
-        #look at tstepust the suceptibles
+                                 timesteplocal=j)
+        #look at just the suceptibles
         m.Susceptible<-arrayStartWith(Z,prefix.Susceptible)
-        #look at tstepust the zombies
+        #look at just the zombies
         m.Zombie<-arrayStartWith(Z,prefix.Zombie)
         m.Susceptible.count<-length(rownames(m.Susceptible))
         m.Zombie.count<-length(rownames(m.Zombie))
-        m.M[tstep,]<-c(m.Susceptible.count,m.Zombie.count)
-        x<-(paste0("Final timestep recorded at t=t",tstep))
+        m.M[j,]<-c(m.Susceptible.count,m.Zombie.count)
+        x<-(paste0("Final timestep recorded at t=t",j))
         if(model.timestep.assessment(m.Susceptible.count,m.Zombie.count)){
           break #if there are no zombies or suscpetibles left then leave
         }
       }
       print(x)
       time.axis<-time.vtimesteps[1:length(time.vtimesteps)]
-      m.M<-cbind(subset(m.M,rowSums(m.M)>=0),tstep)
-      if (plot){
-          p<-lines(x=time.axis,y=m.M[,"SusceptibleCount"],type="l", col="blue")
-          p<-lines(x=time.axis,y=m.M[,"ZombieCount"],type="l", col="red")
-          }
+      m.M<-subset(m.M,rowSums(m.M)>=0)
+      p<-lines(x=time.axis,y=m.M[,"SusceptibleCount"],type="l", col="blue")
+      p<-lines(x=time.axis,y=m.M[,"ZombieCount"],type="l", col="red")
+  
       } else if (mode=="gif"){
         Z<-plotoutbreakXYTasgif(Z,
                                 S.params,
@@ -604,122 +598,25 @@ plotoutbreakXYTasgif<-function(Z,
 
     return(Z)
 }
+#####have some fun
+time.ntimesteps<-99  #time steps
+time.vtimesteps<-c(0:time.ntimesteps) #set up a zero-based vector, t, that will represent time, NB unit time in steps of one
+# epidemiology parameters (note that these have been anglicised from Munz et al, e.g. Π is represented as P)
+config.model<-configuration.SRZModel(P=0,d=0.0001,B=0.0095,G=0.0001,a=0.0001,rcritical=1,zombiewinratio=0.95)
+config.Susceptible<-configuration.Humanoid(xinit=10,yinit=10,n=500,mu=0,sigma=1)# Susceptible configuration
+config.Zombie<-configuration.Humanoid(xinit= 0,yinit=0,n=2,mu=0,sigma=1)# Zombie configuration
+config.plot<-config.plot.global()#axes configuration for gif
 
-#####sql area#####
-sql.addtoSQLServer<-function(cn, m.R, CriticalDistanceKey,
-                               HumanoidKey,
-                               InitialPositionKey,
-                               ModelKey,
-                               ResurrectionRateKey,
-                               TimestepKey,
-                               VelocityKey,
-                               ZombieWinRateKey,
-                               tablename="dbo.FactZombie"){
-  NumberSusceptibles<-m.R["SusceptibleCount"]
-  NumberZombies<-m.R["ZombieCount"]
-  NumberTimeSteps<-m.R["tstep"]
-  tablecols<-sqlColumns(cn, tablename)
-  varTypes             <- as.character(tablecols$TYPE_NAME) 
-  names(varTypes)      <- as.character(tablecols$COLUMN_NAME) 
-  
-  m.A<-c(CriticalDistanceKey,	
-         HumanoidKey,	
-         InitialPositionKey,	
-         ModelKey,	
-         ResurrectionRateKey,	
-         TimestepKey,	
-         VelocityKey,	
-         ZombieWinRateKey,
-         NumberSusceptibles,
-         NumberZombies,
-         NumberTimeSteps)
-  m.AT<-matrix(m.A,nrow=1,ncol=length(m.A),byrow=TRUE)
-  colnames(m.AT)<- as.character(tablecols$COLUMN_NAME)
-  m.df<-data.frame(m.AT)
-  x<-sqlSave(channel=cn,dat=m.df,tablename=tablename,fast=TRUE,append=TRUE,rownames=FALSE,varTypes = varTypes,verbose = TRUE)
-  return(x)
-  
-}
-#####finish prep#####
-print(warnings())
+#zombie playground :-)#
+OutputDataSet<-model.run.params(S.params = config.Susceptible, Z.params = config.Zombie, mode="matrix", iterations = c(1:1))
+
+'
 
 
 
-
-
-
-
-
-#####have some fun#####
-# time.ntimesteps<-99  #time steps
-# time.vtimesteps<-c(0:time.ntimesteps) #set up a zero-based vector, t, that will represent time, NB unit time in steps of one
-# # epidemiology parameters (note that these have been anglicised from Munz et al, e.g. Π is represented as P)
-# config.model<-configuration.SRZModel(P=0,d=0.0001,B=0.0095,G=0.0001,a=0.0001,rcritical=1,zombiewinratio=0.95)
-# config.Susceptible<-configuration.Humanoid(xinit=10,yinit=10,n=500,mu=0,sigma=1)# Susceptible configuration
-# config.Zombie<-configuration.Humanoid(xinit= 0,yinit=0,n=2,mu=0,sigma=1)# Zombie configuration
-# config.plot<-config.plot.global()#axes configuration for gif
-# 
-# #zombie playground :-)#
-# m.M<-model.run.params(S.params = config.Susceptible, Z.params = config.Zombie, mode="matrix", iterations = c(1:1))
-# # m.M<-model.run.params(S.params = config.Susceptible, Z.params = config.Zombie, mode="gif")
-# colMeans(m.M)
-
-
-library(RODBC)
-cn <- odbcConnect("LAYDSQL_Zombie")
-tabledata <- sqlFetch(cn, "vModelIteration")
-m.R<-c()
-for (i in 1:length(rownames(tabledata))){
-  CriticalDistanceKey<-tabledata$CriticalDistanceKey[i]
-  HumanoidKey<-tabledata$HumanoidKey[i]
-  InitialPositionKey<-tabledata$InitialPositionKey[i]
-  ModelKey<-tabledata$ModelKey[i]
-  ResurrectionRateKey<-tabledata$ResurrectionRateKey[i]
-  TimestepKey<-tabledata$TimestepKey[i]
-  VelocityKey<-tabledata$VelocityKey[i]
-  ZombieWinRateKey<-tabledata$ZombieWinRateKey[i]
-  rcritical<-tabledata$CriticalDistanceValue[i]
-  nS<-tabledata$nSusceptible[i]
-  nZ<-tabledata$nZombie[i]
-  initZ<-tabledata$ZombieStart[i]
-  initS<-tabledata$SusceptibleStart[i]
-  d<-tabledata$DeathRate[i]
-  P<-tabledata$BirthRate[i]
-  B<-tabledata$TransmissionRate[i]
-  a<-tabledata$DestructionRate[i]
-  nT<-tabledata$TimestepValue[i]
-  G<-tabledata$ResurrectionRateValue[i]
-  mu<-tabledata$Mu[i]
-  sigma<-tabledata$Sigma[i]
-  ZombieWinRate<-tabledata$ZombieWinRateValue[i]
-  Iterations<-tabledata$Iterations[i]
-  
-
-  time.ntimesteps<-nT  #time steps
-  time.vtimesteps<-c(0:time.ntimesteps) #set up a zero-based vector, t, that will represent time, NB unit time in steps of one
-  # epidemiology parameters (note that these have been anglicised from Munz et al, e.g. Π is represented as P)
-  config.model<-configuration.SRZModel(P=P,d=d,B=B,G=G,a=a,rcritical=rcritical,zombiewinratio=ZombieWinRate)
-  config.Susceptible<-configuration.Humanoid(xinit=initS,yinit=initS,n=nS,mu=mu,sigma=sigma)# Susceptible configuration
-  config.Zombie<-configuration.Humanoid(xinit=initZ,yinit=initZ,n=nZ,mu=mu,sigma=sigma)# Zombie configuration
-  config.plot<-config.plot.global()#axes configuration for gif
-  
-  #zombie playground :-)#
-  m.M<-model.run.params(S.params = config.Susceptible, Z.params = config.Zombie, mode="matrix", iterations = c(1:1))
-  # m.M<-model.run.params(S.params = config.Susceptible, Z.params = config.Zombie, mode="gif")
-  m.R<-colMeans(m.M)
-  sql.addtoSQLServer(cn, m.R, CriticalDistanceKey,
-                            HumanoidKey,
-                            InitialPositionKey,
-                            ModelKey,
-                            ResurrectionRateKey,
-                            TimestepKey,
-                            VelocityKey,
-                            ZombieWinRateKey)
-}
-odbcClose(cn)
-
-
-
-
-
-
+    EXEC sys.sp_execute_external_script @language = N'R'
+                                      , @script = N'OutputDataSet<-data.frame(installed.packages())'--@BigRs
+                                      --, @input_data_1 = @SQLInput
+                                      --, @input_data_1_name = @SQLInputName
+                                      --, @params = N'@modelbin varbinary(max) OUTPUT'
+                                      --, @modelbin = @model OUTPUT;

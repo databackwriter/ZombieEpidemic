@@ -1,0 +1,369 @@
+﻿<Cube xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ddl2="http://schemas.microsoft.com/analysisservices/2003/engine/2" xmlns:ddl2_2="http://schemas.microsoft.com/analysisservices/2003/engine/2/2" xmlns:ddl100_100="http://schemas.microsoft.com/analysisservices/2008/engine/100/100" xmlns:ddl200="http://schemas.microsoft.com/analysisservices/2010/engine/200" xmlns:ddl200_200="http://schemas.microsoft.com/analysisservices/2010/engine/200/200" xmlns:ddl300="http://schemas.microsoft.com/analysisservices/2011/engine/300" xmlns:ddl300_300="http://schemas.microsoft.com/analysisservices/2011/engine/300/300" xmlns:ddl400="http://schemas.microsoft.com/analysisservices/2012/engine/400" xmlns:ddl400_400="http://schemas.microsoft.com/analysisservices/2012/engine/400/400" xmlns:ddl500="http://schemas.microsoft.com/analysisservices/2013/engine/500" xmlns:ddl500_500="http://schemas.microsoft.com/analysisservices/2013/engine/500/500" xmlns:dwd="http://schemas.microsoft.com/DataWarehouse/Designer/1.0" dwd:design-time-name="97dc7059-4d7b-41a6-b629-3a72e0c2854c" xmlns="http://schemas.microsoft.com/analysisservices/2003/engine">
+  <ID>Zombie</ID>
+  <Name>Zombie</Name>
+  <CreatedTimestamp>0001-01-01T00:00:00Z</CreatedTimestamp>
+  <LastSchemaUpdate>0001-01-01T00:00:00Z</LastSchemaUpdate>
+  <Annotations>
+    <Annotation>
+      <Name>http://schemas.microsoft.com/DataWarehouse/Designer/1.0:DiagramLayout</Name>
+    </Annotation>
+    <Annotation>
+      <Name>http://schemas.microsoft.com/DataWarehouse/Designer/1.0:ShowFriendlyNames</Name>
+      <Value>true</Value>
+    </Annotation>
+    <Annotation>
+      <Name>http://schemas.microsoft.com/DataWarehouse/Designer/1.0:ShowRelationshipNames</Name>
+      <Value>false</Value>
+    </Annotation>
+    <Annotation>
+      <Name>http://schemas.microsoft.com/DataWarehouse/Designer/1.0:UseDiagramDefaultLayout</Name>
+      <Value>true</Value>
+    </Annotation>
+    <Annotation>
+      <Name>http://schemas.microsoft.com/DataWarehouse/Designer/1.0:DiagramViewPortLeft</Name>
+      <Value>0</Value>
+    </Annotation>
+    <Annotation>
+      <Name>http://schemas.microsoft.com/DataWarehouse/Designer/1.0:DiagramViewPortTop</Name>
+      <Value>0</Value>
+    </Annotation>
+    <Annotation>
+      <Name>http://schemas.microsoft.com/DataWarehouse/Designer/1.0:DiagramBoundingLeft</Name>
+      <Value>0</Value>
+    </Annotation>
+    <Annotation>
+      <Name>http://schemas.microsoft.com/DataWarehouse/Designer/1.0:DiagramBoundingTop</Name>
+      <Value>0</Value>
+    </Annotation>
+    <Annotation>
+      <Name>http://schemas.microsoft.com/DataWarehouse/Designer/1.0:DiagramZoom</Name>
+      <Value>100</Value>
+    </Annotation>
+  </Annotations>
+  <LastProcessed>0001-01-01T00:00:00Z</LastProcessed>
+  <State>Unprocessed</State>
+  <Dimensions>
+    <Dimension dwd:design-time-name="c1937e5d-1da2-486d-ac44-49fe9e708fe4">
+      <ID>Velocity</ID>
+      <Name>Velocity</Name>
+      <DimensionID>Velocity</DimensionID>
+      <Attributes>
+        <Attribute dwd:design-time-name="f337404f-82d2-4d17-a968-237cfe57bbbd">
+          <AttributeID>Velocity Key</AttributeID>
+        </Attribute>
+        <Attribute dwd:design-time-name="ee50e917-6b75-41fe-8a82-a1b4fcf41090">
+          <AttributeID>Mu</AttributeID>
+        </Attribute>
+        <Attribute dwd:design-time-name="6a2696b5-9fb2-416a-91c4-eb33423f3bab">
+          <AttributeID>Sigma</AttributeID>
+        </Attribute>
+      </Attributes>
+    </Dimension>
+    <Dimension dwd:design-time-name="1eaf605c-b739-45b8-b79a-e9c16b86d215">
+      <ID>Zombie Win Rate</ID>
+      <Name>Zombie Win Rate</Name>
+      <DimensionID>Zombie Win Rate</DimensionID>
+      <Attributes>
+        <Attribute dwd:design-time-name="05cf112e-44a7-4d3b-b62e-8bf6a2e44f81">
+          <AttributeID>Zombie Win Rate Key</AttributeID>
+        </Attribute>
+        <Attribute dwd:design-time-name="d90fb34e-1507-40aa-821b-57fa63f01e7f">
+          <AttributeID>Zombie Win Rate Value</AttributeID>
+        </Attribute>
+      </Attributes>
+    </Dimension>
+    <Dimension dwd:design-time-name="9e7b1ea4-fdcd-4e85-b449-17d2d407d5a5">
+      <ID>Resurrection Rate</ID>
+      <Name>Resurrection Rate</Name>
+      <DimensionID>Resurrection Rate</DimensionID>
+      <Attributes>
+        <Attribute dwd:design-time-name="a43455e1-d45c-40d1-8331-b315cf6f0af2">
+          <AttributeID>Resurrection Rate Key</AttributeID>
+        </Attribute>
+        <Attribute dwd:design-time-name="3879f732-c4a5-4b18-a586-fdacf1aadc29">
+          <AttributeID>Resurrection Rate Value</AttributeID>
+        </Attribute>
+      </Attributes>
+    </Dimension>
+    <Dimension dwd:design-time-name="5ff3c513-3b43-438f-b348-aa0dc9581d55">
+      <ID>Model Parameters</ID>
+      <Name>Model Parameters</Name>
+      <DimensionID>Model Parameters</DimensionID>
+      <Attributes>
+        <Attribute dwd:design-time-name="8d55b38e-ea21-4f40-94c5-adc212a184d1">
+          <AttributeID>Model Key</AttributeID>
+        </Attribute>
+        <Attribute dwd:design-time-name="0f04b960-2d79-4d4b-9fa9-d8d61b3cebe4">
+          <AttributeID>Model Name</AttributeID>
+        </Attribute>
+        <Attribute dwd:design-time-name="adeef5e3-9791-4291-a15c-615912180a8d">
+          <AttributeID>Iterations</AttributeID>
+        </Attribute>
+      </Attributes>
+    </Dimension>
+    <Dimension dwd:design-time-name="4aa96872-c849-4799-be26-38d456a43dc9">
+      <ID>Time Step</ID>
+      <Name>Time Step</Name>
+      <DimensionID>Time Step</DimensionID>
+      <Attributes>
+        <Attribute dwd:design-time-name="7266daeb-dab1-4160-914a-c362634f7f52">
+          <AttributeID>Timestep Key</AttributeID>
+        </Attribute>
+        <Attribute dwd:design-time-name="67fd1ac3-f41c-44b5-a52e-4fb1a910ef92">
+          <AttributeID>Timestep Value</AttributeID>
+        </Attribute>
+      </Attributes>
+    </Dimension>
+    <Dimension dwd:design-time-name="0438c99c-531e-49de-b59e-59112f0977ba">
+      <ID>Humanoid</ID>
+      <Name>Humanoid</Name>
+      <DimensionID>Humanoid</DimensionID>
+      <Attributes>
+        <Attribute dwd:design-time-name="4809c368-843d-4914-ad6b-d14f5ac63112">
+          <AttributeID>Humanoid Key</AttributeID>
+        </Attribute>
+        <Attribute dwd:design-time-name="baa1bf42-c339-4818-bff1-2106c0e1457f">
+          <AttributeID>Humanoid Name</AttributeID>
+        </Attribute>
+        <Attribute dwd:design-time-name="57e44cd4-7c91-4619-901d-d1923b46d960">
+          <AttributeID>n Susceptible</AttributeID>
+        </Attribute>
+        <Attribute dwd:design-time-name="aa8450d4-b12c-4687-94bc-28610bb4d1b2">
+          <AttributeID>n Zombie</AttributeID>
+        </Attribute>
+        <Attribute dwd:design-time-name="47ae6d24-6005-4a0f-96fe-b207980c9ccf">
+          <AttributeID>Ratio</AttributeID>
+        </Attribute>
+        <Attribute dwd:design-time-name="ad33d69d-257e-48ba-a3b5-5b361e64fe75">
+          <AttributeID>Ratio Band</AttributeID>
+        </Attribute>
+      </Attributes>
+    </Dimension>
+    <Dimension dwd:design-time-name="861be8b4-d608-43d3-8856-9518eb822082">
+      <ID>Initial Position</ID>
+      <Name>Initial Position</Name>
+      <DimensionID>Initial Position</DimensionID>
+      <Attributes>
+        <Attribute dwd:design-time-name="08a201f2-825c-4a60-b64d-2ee308d57bad">
+          <AttributeID>Initial Position Key</AttributeID>
+        </Attribute>
+        <Attribute dwd:design-time-name="eae8591a-0ad3-444a-b8a6-44d9b9c6f79a">
+          <AttributeID>Zombie Start</AttributeID>
+        </Attribute>
+        <Attribute dwd:design-time-name="caa9d49e-22bc-4c18-8a39-9372b9451b81">
+          <AttributeID>Susceptible Start</AttributeID>
+        </Attribute>
+      </Attributes>
+    </Dimension>
+    <Dimension dwd:design-time-name="29acbcab-4e78-4c12-affd-ff4bde59f5bb">
+      <ID>Critical Distance</ID>
+      <Name>Critical Distance</Name>
+      <DimensionID>Critical Distance</DimensionID>
+      <Attributes>
+        <Attribute dwd:design-time-name="7f938df0-3689-4a51-b504-4c9c54e27a43">
+          <AttributeID>Critical Distance Key</AttributeID>
+        </Attribute>
+        <Attribute dwd:design-time-name="ade7853b-6fde-4cc2-8688-b53c2472d1d2">
+          <AttributeID>Critical Distance Value</AttributeID>
+        </Attribute>
+      </Attributes>
+    </Dimension>
+  </Dimensions>
+  <MeasureGroups>
+    <MeasureGroup dwd:design-time-name="398d8038-d438-4818-90e9-b826e189fcb6">
+      <ID>Zombie</ID>
+      <Name>Zombie</Name>
+      <CreatedTimestamp>0001-01-01T00:00:00Z</CreatedTimestamp>
+      <LastSchemaUpdate>0001-01-01T00:00:00Z</LastSchemaUpdate>
+      <LastProcessed>0001-01-01T00:00:00Z</LastProcessed>
+      <State>Unprocessed</State>
+      <Measures>
+        <Measure dwd:design-time-name="81f477b1-644e-47ff-b1d7-6bacbe6163d5">
+          <ID>Number Susceptibles</ID>
+          <Name>Number Susceptibles</Name>
+          <Source dwd:design-time-name="a8f5754a-0d98-49e7-b111-f9b569329c2a">
+            <DataType>Double</DataType>
+            <Source xsi:type="ColumnBinding" dwd:design-time-name="3abe7cf7-c1fa-4c22-90ff-a11e56295b39">
+              <TableID>dbo_FactZombie</TableID>
+              <ColumnID>NumberSusceptibles</ColumnID>
+            </Source>
+          </Source>
+        </Measure>
+        <Measure dwd:design-time-name="529e12c8-0864-4a46-8bad-e030c4df3e65">
+          <ID>Number Zombies</ID>
+          <Name>Number Zombies</Name>
+          <Source dwd:design-time-name="8723b9ad-2013-465d-8f1d-2b3a82cbdfad">
+            <DataType>Double</DataType>
+            <Source xsi:type="ColumnBinding" dwd:design-time-name="9ff2783e-a5a3-4f58-b923-13d4c81eabf0">
+              <TableID>dbo_FactZombie</TableID>
+              <ColumnID>NumberZombies</ColumnID>
+            </Source>
+          </Source>
+        </Measure>
+        <Measure dwd:design-time-name="e63c8e28-f341-480c-815c-5a874c94e6d9">
+          <ID>Number Time Steps</ID>
+          <Name>Number Time Steps</Name>
+          <Source dwd:design-time-name="da07b412-1916-4e2f-a235-d94b68539b65">
+            <DataType>Double</DataType>
+            <Source xsi:type="ColumnBinding" dwd:design-time-name="bb466256-8d8e-4343-a623-40a18236691c">
+              <TableID>dbo_FactZombie</TableID>
+              <ColumnID>NumberTimeSteps</ColumnID>
+            </Source>
+          </Source>
+        </Measure>
+      </Measures>
+      <StorageMode>Molap</StorageMode>
+      <ProcessingMode>Regular</ProcessingMode>
+      <Dimensions>
+        <Dimension xsi:type="RegularMeasureGroupDimension" dwd:design-time-name="9a77c6b0-1b78-4fc3-aba5-712cfffd09cd">
+          <CubeDimensionID>Velocity</CubeDimensionID>
+          <Attributes>
+            <Attribute dwd:design-time-name="0e7ac32c-3707-4942-8819-618830031f7f">
+              <AttributeID>Velocity Key</AttributeID>
+              <KeyColumns>
+                <KeyColumn dwd:design-time-name="488d8109-25f2-4770-8544-e8892e4a3952">
+                  <DataType>Integer</DataType>
+                  <Source xsi:type="ColumnBinding" dwd:design-time-name="6b5b5458-29a7-45c5-9c41-b845a1450ac5">
+                    <TableID>dbo_FactZombie</TableID>
+                    <ColumnID>VelocityKey</ColumnID>
+                  </Source>
+                </KeyColumn>
+              </KeyColumns>
+              <Type>Granularity</Type>
+            </Attribute>
+          </Attributes>
+        </Dimension>
+        <Dimension xsi:type="RegularMeasureGroupDimension" dwd:design-time-name="b568235e-37bd-4609-bfe7-65d9ba4bb1cf">
+          <CubeDimensionID>Zombie Win Rate</CubeDimensionID>
+          <Attributes>
+            <Attribute dwd:design-time-name="b20b3fcb-128a-4b8e-9ed4-293be0505eed">
+              <AttributeID>Zombie Win Rate Key</AttributeID>
+              <KeyColumns>
+                <KeyColumn dwd:design-time-name="74be49b4-b1f4-4ffa-8424-10ad54148c7b">
+                  <DataType>Integer</DataType>
+                  <Source xsi:type="ColumnBinding" dwd:design-time-name="67e35a25-b8f6-4988-be88-dbc0fe84335b">
+                    <TableID>dbo_FactZombie</TableID>
+                    <ColumnID>ZombieWinRateKey</ColumnID>
+                  </Source>
+                </KeyColumn>
+              </KeyColumns>
+              <Type>Granularity</Type>
+            </Attribute>
+          </Attributes>
+        </Dimension>
+        <Dimension xsi:type="RegularMeasureGroupDimension" dwd:design-time-name="8a853a57-6fca-4732-8a3f-3ff77249b1f5">
+          <CubeDimensionID>Resurrection Rate</CubeDimensionID>
+          <Attributes>
+            <Attribute dwd:design-time-name="b05d0ade-2b4f-4bf4-8503-8affc21fa5db">
+              <AttributeID>Resurrection Rate Key</AttributeID>
+              <KeyColumns>
+                <KeyColumn dwd:design-time-name="270c411f-3f66-4ed4-8f00-3ef8ff322b09">
+                  <DataType>Integer</DataType>
+                  <Source xsi:type="ColumnBinding" dwd:design-time-name="9ccaf819-63a2-47a7-add5-28c494e62bed">
+                    <TableID>dbo_FactZombie</TableID>
+                    <ColumnID>ResurrectionRateKey</ColumnID>
+                  </Source>
+                </KeyColumn>
+              </KeyColumns>
+              <Type>Granularity</Type>
+            </Attribute>
+          </Attributes>
+        </Dimension>
+        <Dimension xsi:type="RegularMeasureGroupDimension" dwd:design-time-name="3b42800b-9839-4f7c-8ba0-24476f8cecc1">
+          <CubeDimensionID>Model Parameters</CubeDimensionID>
+          <Attributes>
+            <Attribute dwd:design-time-name="b8bdf4a6-ba60-46bc-9fce-8f2b32c0cf7d">
+              <AttributeID>Model Key</AttributeID>
+              <KeyColumns>
+                <KeyColumn dwd:design-time-name="2c28413d-9ccc-457c-9a1b-6140bb39edf2">
+                  <DataType>Integer</DataType>
+                  <Source xsi:type="ColumnBinding" dwd:design-time-name="83ce357a-3f8e-41c2-9980-170fa0baf1bb">
+                    <TableID>dbo_FactZombie</TableID>
+                    <ColumnID>ModelKey</ColumnID>
+                  </Source>
+                </KeyColumn>
+              </KeyColumns>
+              <Type>Granularity</Type>
+            </Attribute>
+          </Attributes>
+        </Dimension>
+        <Dimension xsi:type="RegularMeasureGroupDimension" dwd:design-time-name="644f9ce6-7e93-47bd-bdaa-2256bcc9ef69">
+          <CubeDimensionID>Time Step</CubeDimensionID>
+          <Attributes>
+            <Attribute dwd:design-time-name="23036a81-9b7a-4061-aa65-2e04d116a974">
+              <AttributeID>Timestep Key</AttributeID>
+              <KeyColumns>
+                <KeyColumn dwd:design-time-name="ae0a374c-4b0b-4df6-a25f-4074ffcf9ab8">
+                  <DataType>Integer</DataType>
+                  <Source xsi:type="ColumnBinding" dwd:design-time-name="82c759f4-3a33-4956-981e-8fbd9cba37ab">
+                    <TableID>dbo_FactZombie</TableID>
+                    <ColumnID>TimestepKey</ColumnID>
+                  </Source>
+                </KeyColumn>
+              </KeyColumns>
+              <Type>Granularity</Type>
+            </Attribute>
+          </Attributes>
+        </Dimension>
+        <Dimension xsi:type="RegularMeasureGroupDimension" dwd:design-time-name="c983109a-587f-4f9a-9975-a2c055e6a007">
+          <CubeDimensionID>Humanoid</CubeDimensionID>
+          <Attributes>
+            <Attribute dwd:design-time-name="4f2fdc66-45b0-4f1d-a9a9-c964173127b3">
+              <AttributeID>Humanoid Key</AttributeID>
+              <KeyColumns>
+                <KeyColumn dwd:design-time-name="ddb82edf-f891-4940-99bd-f30407b07bb9">
+                  <DataType>Integer</DataType>
+                  <Source xsi:type="ColumnBinding" dwd:design-time-name="686ee350-02bd-4978-a192-853659b8bfbf">
+                    <TableID>dbo_FactZombie</TableID>
+                    <ColumnID>HumanoidKey</ColumnID>
+                  </Source>
+                </KeyColumn>
+              </KeyColumns>
+              <Type>Granularity</Type>
+            </Attribute>
+          </Attributes>
+        </Dimension>
+        <Dimension xsi:type="RegularMeasureGroupDimension" dwd:design-time-name="aedfd0ad-73ee-41a1-a164-0e40dca31dbf">
+          <CubeDimensionID>Initial Position</CubeDimensionID>
+          <Attributes>
+            <Attribute dwd:design-time-name="b150c82b-c91d-46a3-9cac-21584fbd0dfb">
+              <AttributeID>Initial Position Key</AttributeID>
+              <KeyColumns>
+                <KeyColumn dwd:design-time-name="e10ecb2e-9646-4424-bd1b-b698d4bf7850">
+                  <DataType>Integer</DataType>
+                  <Source xsi:type="ColumnBinding" dwd:design-time-name="5ff2988c-95ac-43eb-9c70-7e0713f8079a">
+                    <TableID>dbo_FactZombie</TableID>
+                    <ColumnID>InitialPositionKey</ColumnID>
+                  </Source>
+                </KeyColumn>
+              </KeyColumns>
+              <Type>Granularity</Type>
+            </Attribute>
+          </Attributes>
+        </Dimension>
+        <Dimension xsi:type="RegularMeasureGroupDimension" dwd:design-time-name="79d34330-b7c1-4f39-b3c7-e901fce9c8dc">
+          <CubeDimensionID>Critical Distance</CubeDimensionID>
+          <Attributes>
+            <Attribute dwd:design-time-name="66f01f95-aa3f-4dc4-8dd1-1c57d7252a42">
+              <AttributeID>Critical Distance Key</AttributeID>
+              <KeyColumns>
+                <KeyColumn dwd:design-time-name="567dd17b-3192-4593-bac4-42e6c5743ff0">
+                  <DataType>Integer</DataType>
+                  <Source xsi:type="ColumnBinding" dwd:design-time-name="d2cae224-f7bc-4b10-9c24-e076cdb2afd3">
+                    <TableID>dbo_FactZombie</TableID>
+                    <ColumnID>CriticalDistanceKey</ColumnID>
+                  </Source>
+                </KeyColumn>
+              </KeyColumns>
+              <Type>Granularity</Type>
+            </Attribute>
+          </Attributes>
+        </Dimension>
+      </Dimensions>
+      <Partitions />
+    </MeasureGroup>
+  </MeasureGroups>
+  <Source dwd:design-time-name="5ae13de6-5c6b-4b5f-8ef6-3711da0542f0">
+    <DataSourceViewID>Zombie</DataSourceViewID>
+  </Source>
+</Cube>

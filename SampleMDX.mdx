@@ -1,0 +1,17 @@
+SELECT [Velocity].[Mean velocity].[Mean velocity] ON COLUMNS,	
+	  [Initial Position].[Zombie Start Position].&[0]	  ON ROWS
+FROM [Zombie]		
+WHERE 	{[Measures].[Number Zombies]	 	  }	;
+
+
+
+
+SELECT  [Velocity].[Mean velocity].[Mean velocity] ON COLUMNS,	
+	  [Initial Position].[Susceptible Start Position].&[100]	  ON ROWS
+FROM Zombie
+ WHERE { [Measures].[Number Susceptibles] } 
+
+
+
+
+ 
